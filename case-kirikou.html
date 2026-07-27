@@ -79,6 +79,32 @@
   #win{margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--color-accent);display:none}
   #win h2{font-size:22px;font-weight:400;margin:0 0 var(--space-2)}
   #win p{font-size:13.5px;text-align:justify;hyphens:auto;margin:0}
+
+  /* ── Mobile : la scène occupe tout l'écran, le panneau devient une
+        feuille repliable en bas pour voir et toucher les objets. ── */
+  #panel-poignee{display:none}
+  @media (max-width:900px){
+    #panel{
+      top:auto;inset:auto 0 0 0;left:0;right:0;bottom:0;
+      width:auto;max-width:none;max-height:56vh;overflow:auto;
+      border-radius:16px 16px 0 0;
+      padding:4px var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+      box-shadow:0 -12px 30px -14px rgba(45,43,43,.4);
+      transition:max-height .3s ease;
+    }
+    #panel-poignee{
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      position:sticky;top:0;z-index:3;width:100%;border:0;background:transparent;
+      cursor:pointer;padding:6px 0 8px;margin:0;font:inherit;color:inherit;
+      -webkit-tap-highlight-color:transparent;
+    }
+    #panel-poignee .grip{width:44px;height:4px;border-radius:999px;
+      background:color-mix(in srgb,var(--color-accent) 55%,transparent)}
+    #panel-poignee .poignee-txt{font-family:var(--font-heading);font-size:11px;
+      letter-spacing:.1em;text-transform:uppercase;
+      color:color-mix(in srgb,var(--color-text) 55%,transparent)}
+    body.panel-plie #panel{max-height:72px;overflow:hidden}
+  }
 </style>
 </head>
 <body>
@@ -97,6 +123,7 @@
 <three-d-stage name="case-africaine" background="#efe9df"></three-d-stage>
 
 <aside id="panel">
+  <button id="panel-poignee" type="button" aria-label="Plier ou déplier le panneau" aria-expanded="true"><span class="grip"></span><span class="poignee-txt">Réduire</span></button>
   <p class="kicker">Conte en cinq indices</p>
   <h1>La case aux cauris</h1>
   <hr class="hr">
@@ -493,6 +520,25 @@ dom.addEventListener('pointermove', e => {
 rendu();
 </script>
 <script>
+  /* Panneau mobile : la poignée plie/déplie la feuille du bas
+     pour dégager la scène 3D et toucher les objets. */
+  (function () {
+    var panel = document.getElementById('panel');
+    var p = document.getElementById('panel-poignee');
+    if (panel && p) {
+      var txt = p.querySelector('.poignee-txt');
+      var set = function (plie) {
+        document.body.classList.toggle('panel-plie', plie);
+        p.setAttribute('aria-expanded', String(!plie));
+        if (txt) txt.textContent = plie ? 'Ouvrir' : 'Réduire';
+        if (!plie) panel.scrollTop = 0;
+      };
+      p.addEventListener('click', function () {
+        set(!document.body.classList.contains('panel-plie'));
+      });
+    }
+  })();
+
   /* Enregistrement du service worker — rend l'app installable + hors-ligne. */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

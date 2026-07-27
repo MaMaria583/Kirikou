@@ -4,7 +4,7 @@
    - three.js (unpkg) et polices (Google Fonts) : mis en cache au vol.
    Incrémente CACHE à chaque déploiement pour forcer la mise à jour. */
 
-const CACHE = 'naba-v1';
+const CACHE = 'naba-v2';
 
 const APP_SHELL = [
   '/',

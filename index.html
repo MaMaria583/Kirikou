@@ -232,6 +232,53 @@
   body.sombre #veil{background:color-mix(in srgb,#000 72%,transparent)}
   body.sombre .text-muted{color:color-mix(in srgb,#eadfcd 52%,transparent)}
 </style>
+<style id="mobile">
+  /* ── Adaptation mobile : la scène 3D occupe tout l'écran, le panneau
+        devient une « feuille » en bas qu'on peut replier pour voir et
+        toucher les objets de la case. ── */
+  #hud-poignee{display:none}                 /* masquée hors mobile */
+
+  @media (max-width:900px){
+    three-d-stage{left:0}
+
+    #hud{
+      position:fixed !important;
+      inset:auto 0 0 0;                       /* collé en bas, pleine largeur */
+      width:auto !important; max-width:none;
+      max-height:56vh !important;
+      overflow:auto !important;
+      border-radius:16px 16px 0 0;
+      padding:4px var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+      box-shadow:0 -12px 30px -14px rgba(60,38,16,.55);
+      -webkit-overflow-scrolling:touch;
+      transition:max-height .3s ease;
+    }
+    #hud::before{display:none}                /* le bandeau cède la place à la poignée */
+
+    #hud-poignee{
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      position:sticky;top:0;z-index:3;
+      width:100%;border:0;background:transparent;cursor:pointer;
+      padding:6px 0 8px;margin:0;font:inherit;color:inherit;
+      -webkit-tap-highlight-color:transparent;
+    }
+    #hud-poignee .grip{
+      width:44px;height:4px;border-radius:999px;
+      background:color-mix(in srgb,var(--or) 60%,transparent);
+    }
+    #hud-poignee .poignee-txt{
+      font-family:var(--font-heading);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+      color:color-mix(in srgb,var(--encre) 55%,transparent);
+    }
+    body.sombre #hud-poignee .poignee-txt{color:color-mix(in srgb,#eadfcd 55%,transparent)}
+
+    /* replié : ne montre que la poignée + un aperçu de l'en-tête */
+    body.hud-plie #hud{max-height:72px !important;overflow:hidden !important}
+
+    #defi{white-space:normal}                 /* évite le débordement horizontal */
+    #consigne,#say,#sheet p,.lede{text-align:left}
+  }
+</style>
 </head>
 <body>
 <template id="__bundler_thumbnail" data-bg-color="#efe9df">
@@ -249,6 +296,7 @@
 <three-d-stage name="village-de-naba" background="#f1e3c9"></three-d-stage>
 
 <aside id="hud">
+  <button id="hud-poignee" type="button" aria-label="Plier ou déplier le panneau" aria-expanded="true"><span class="grip"></span><span class="poignee-txt">Réduire</span></button>
   <p class="kicker"><span id="lvl">Niveau 01</span><span class="vies" id="vies"></span></p>
   <h1 id="titre">Le village de Naba</h1>
   <p class="lieu" id="lieu">La case de Karfa</p>
@@ -1352,6 +1400,25 @@ window.__dbg = { J, lancer, demarrer, camTo, lieu: () => lieuActif, spots: () =>
 }, repondre, suite: () => suite, bonne: () => bonne };
 </script>
 <script>
+  /* Panneau mobile : la poignée plie/déplie la feuille du bas
+     pour dégager la scène 3D et pouvoir toucher les objets. */
+  (function () {
+    var hud = document.getElementById('hud');
+    var p = document.getElementById('hud-poignee');
+    if (hud && p) {
+      var txt = p.querySelector('.poignee-txt');
+      var set = function (plie) {
+        document.body.classList.toggle('hud-plie', plie);
+        p.setAttribute('aria-expanded', String(!plie));
+        if (txt) txt.textContent = plie ? 'Ouvrir' : 'Réduire';
+        if (!plie) hud.scrollTop = 0;
+      };
+      p.addEventListener('click', function () {
+        set(!document.body.classList.contains('hud-plie'));
+      });
+    }
+  })();
+
   /* Enregistrement du service worker — rend l'app installable + hors-ligne. */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
