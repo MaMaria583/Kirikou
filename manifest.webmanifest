@@ -1,0 +1,38 @@
+{
+  "name": "Le village de Naba",
+  "short_name": "Village de Naba",
+  "description": "Le village de Naba — 30 jeux et énigmes autour d'un village africain en 3D.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#efe9df",
+  "theme_color": "#b68235",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "La case aux cauris (Kirikou)",
+      "url": "/kirikou"
+    }
+  ]
+}

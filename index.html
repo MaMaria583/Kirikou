@@ -2,9 +2,18 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Le village de Naba — 30 jeux</title>
 <link rel="stylesheet" href="_ds/classical-9af83fcb-e414-4ae4-b793-a669f9333310/styles.css">
+<!-- PWA / application installable -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#b68235">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Village de Naba">
 <script type="importmap">
 {
   "imports": {
@@ -1341,6 +1350,14 @@ window.__dbg = { J, lancer, demarrer, camTo, lieu: () => lieuActif, spots: () =>
   else if (J.phase === 'ordre') toucheOrdre(id);
   else if (J.phase === 'intrus') toucheIntrus(id);
 }, repondre, suite: () => suite, bonne: () => bonne };
+</script>
+<script>
+  /* Enregistrement du service worker — rend l'app installable + hors-ligne. */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>
