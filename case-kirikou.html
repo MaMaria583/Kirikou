@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La case aux cauris</title>
+<link rel="stylesheet" href="_ds/classical-9af83fcb-e414-4ae4-b793-a669f9333310/styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<style>
+  three-d-stage:not(:defined){visibility:hidden}
+  html,body{height:100%}
+  body{margin:0;overflow:hidden;background:var(--color-bg)}
+  three-d-stage{position:fixed;top:0;right:0;bottom:0;left:404px;width:auto;height:100vh}
+  @media (max-width:900px){three-d-stage{left:0}}
+  #panel{
+    position:fixed;top:var(--space-6);left:var(--space-6);width:352px;
+    max-height:calc(100vh - var(--space-8) * 2);overflow:auto;
+    background:color-mix(in srgb, var(--color-bg) 92%, transparent);
+    backdrop-filter:blur(3px);
+    border:1px solid var(--color-divider);border-radius:var(--radius-md);
+    padding:var(--space-6);box-shadow:var(--shadow-md);
+  }
+  #panel h1{font-size:34px;font-weight:400;margin:0}
+  .kicker{
+    font-family:var(--font-heading);font-feature-settings:"tnum";
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--color-accent-700);margin:0 0 var(--space-2)
+  }
+  .lede{font-size:13.5px;text-align:justify;hyphens:auto;color:color-mix(in srgb,var(--color-text) 72%,transparent)}
+  ol.clues{list-style:none;margin:0;padding:0;display:grid;gap:0}
+  ol.clues li{
+    display:grid;grid-template-columns:26px 1fr;gap:var(--space-3);
+    padding:var(--space-3) 0;border-top:1px solid var(--color-divider);
+  }
+  .num{font-family:var(--font-heading);font-feature-settings:"tnum";font-size:15px;
+       color:var(--color-accent-700);padding-top:1px}
+  .ctxt{font-size:13.5px;line-height:1.62;text-align:justify;hyphens:auto;margin:0}
+  .ref{display:block;font-size:11.5px;font-style:italic;margin-top:var(--space-1);
+       color:color-mix(in srgb,var(--color-text) 55%,transparent)}
+  li.locked .ctxt,li.locked .num{color:var(--color-neutral-400)}
+  li.found .num{color:var(--color-accent)}
+  li.found .ctxt{text-decoration:line-through;text-decoration-color:var(--color-neutral-400);
+                 color:color-mix(in srgb,var(--color-text) 60%,transparent)}
+  li.active{border-left:2px solid var(--color-accent);padding-left:var(--space-3);margin-left:-2px}
+  #status{font-size:13px;font-style:italic;min-height:2.6em;
+          color:color-mix(in srgb,var(--color-text) 70%,transparent);text-align:justify}
+  .actions{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  #tip{
+    position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;
+    font-family:var(--font-heading);font-size:13px;padding:3px 9px;
+    background:var(--color-neutral-900);color:var(--color-neutral-100);
+    border-radius:var(--radius-sm);transform:translate(12px,-28px);z-index:5
+  }
+  #win{margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--color-accent);display:none}
+  #win h2{font-size:22px;font-weight:400;margin:0 0 var(--space-2)}
+  #win p{font-size:13.5px;text-align:justify;hyphens:auto;margin:0}
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#efe9df">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#efe9df"/>
+    <ellipse cx="600" cy="640" rx="330" ry="52" fill="#b56a3c"/>
+    <rect x="430" y="420" width="340" height="200" rx="10" fill="#c98f57"/>
+    <rect x="566" y="500" width="68" height="120" rx="6" fill="#6d4a2b"/>
+    <path d="M600 170 L840 430 L360 430 Z" fill="#d0a862"/>
+    <path d="M600 240 L770 430 L430 430 Z" fill="#dcbb79"/>
+    <circle cx="600" cy="162" r="17" fill="#8e4529"/>
+    <circle cx="600" cy="560" r="26" fill="none" stroke="#b68235" stroke-width="9"/>
+  </svg>
+</template>
+<three-d-stage name="case-africaine" background="#efe9df"></three-d-stage>
+
+<aside id="panel">
+  <p class="kicker">Conte en cinq indices</p>
+  <h1>La case aux cauris</h1>
+  <hr class="hr">
+  <p class="lede">Le vieux Karfa est parti rejoindre les ancêtres. Il a laissé sa case ronde, son toit de chaume — et, quelque part sous la terre battue, le trésor du village. Soulève le toit, écoute les indices, et touche l’objet dont ils parlent.</p>
+  <div class="actions">
+    <button class="btn btn-primary" id="roof" type="button">Soulever le toit</button>
+    <button class="btn btn-secondary" id="reset" type="button">Recommencer</button>
+  </div>
+  <hr class="hr">
+  <ol class="clues" id="list"></ol>
+  <p id="status">Entre dans la case pour commencer.</p>
+  <div id="win">
+    <h2>Le trésor de Karfa</h2>
+    <p>Sous la cendre du foyer, une jarre scellée&nbsp;: une poignée de <em>cauris</em> — la monnaie des caravanes — et de la poudre d’or du Bouré. Karfa n’était pas riche&nbsp;: il gardait la dot du village.</p>
+  </div>
+</aside>
+<div id="tip"></div>
+
+<script src="./three-d-stage.js"></script>
+<script type="module">
+const stage = document.querySelector('three-d-stage');
+const { THREE } = await stage.ready;
+
+/* ── matières ─────────────────────────────────────────────── */
+const M = (name, color, o = {}) =>
+  new THREE.MeshStandardMaterial({ name, color, roughness: 0.9, ...o });
+const mat = {
+  banco:      M('banco', 0xc98f57, { roughness: 1 }),
+  bancoSombre:M('banco_sombre', 0xa4652f, { roughness: 1 }),
+  chaume:     M('chaume', 0xd0a862, { roughness: 1, flatShading: true }),
+  chaumeClair:M('chaume_clair', 0xdcbb79, { roughness: 1, flatShading: true }),
+  corde:      M('corde', 0x6b5433, { roughness: 1 }),
+  bois:       M('bois', 0x6d4a2b, { roughness: 0.85 }),
+  boisClair:  M('bois_clair', 0x9a7346, { roughness: 0.85 }),
+  terre:      M('terre_laterite', 0xb56a3c, { roughness: 1 }),
+  solBattu:   M('sol_battu', 0x8d5c39, { roughness: 1 }),
+  terreCuite: M('terre_cuite', 0x8e4529, { roughness: 0.8 }),
+  pierre:     M('pierre', 0x7c746b, { roughness: 0.95 }),
+  cendre:     M('cendre', 0x9d968c, { roughness: 1 }),
+  peau:       M('peau_de_chevre', 0xe6d8b8, { roughness: 0.7 }),
+  calebasse:  M('calebasse', 0xd8c187, { roughness: 0.6 }),
+  tissu:      M('tissu_indigo', 0x2f4056, { roughness: 0.95 }),
+  natte:      M('natte', 0xc0a46a, { roughness: 1 }),
+  masque:     M('masque_bois', 0x4a3120, { roughness: 0.8 }),
+  or:         M('or', 0xd9a83a, { roughness: 0.35, metalness: 0.35 }),
+  cauri:      M('cauri', 0xefe4cf, { roughness: 0.5 }),
+  ombre:      M('trou_sombre', 0x2b1d13, { roughness: 1 }),
+};
+
+const mesh = (geo, m, name) => { const x = new THREE.Mesh(geo, m); x.name = name; return x; };
+const lathe = (profile, m, name, seg = 40) =>
+  mesh(new THREE.LatheGeometry(profile.map(p => new THREE.Vector2(p[0], p[1])), seg), m, name);
+
+/** anneau de banco : arc [a0,a1], entre inner et outer, extrudé sur h */
+function ring(a0, a1, inner, outer, h, m, name) {
+  const N = 72, pts = [];
+  for (let i = 0; i <= N; i++) { const a = a0 + (a1 - a0) * i / N; pts.push(new THREE.Vector2(Math.cos(a) * outer, Math.sin(a) * outer)); }
+  for (let i = N; i >= 0; i--) { const a = a0 + (a1 - a0) * i / N; pts.push(new THREE.Vector2(Math.cos(a) * inner, Math.sin(a) * inner)); }
+  const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: h, bevelEnabled: false, curveSegments: 8 });
+  geo.rotateX(-Math.PI / 2);
+  return mesh(geo, m, name);
+}
+
+const case_ = new THREE.Group(); case_.name = 'case_africaine';
+const R_IN = 1.52, R_OUT = 1.74, WALL_H = 1.92, FLOOR_Y = 0.16;
+const DOOR = -Math.PI / 2, DOOR_W = 0.30, DOOR_H = 1.32;
+
+/* ── sol du village ───────────────────────────────────────── */
+const terrasse = mesh(new THREE.CylinderGeometry(3.9, 4.1, 0.12, 64), mat.terre, 'terrasse');
+terrasse.position.y = -0.06; case_.add(terrasse);
+for (let i = 0; i < 9; i++) {
+  const a = i * 2.31, r = 2.3 + (i % 3) * 0.55;
+  const g = mesh(new THREE.SphereGeometry(0.055 + (i % 4) * 0.018, 12, 8), mat.pierre, 'caillou_' + i);
+  g.position.set(Math.cos(a) * r, 0.02, Math.sin(a) * r); g.scale.y = 0.6; case_.add(g);
+}
+
+/* ── murs de banco ────────────────────────────────────────── */
+const soubassement = mesh(new THREE.CylinderGeometry(R_OUT + 0.1, R_OUT + 0.16, FLOOR_Y, 64), mat.bancoSombre, 'soubassement');
+soubassement.position.y = FLOOR_Y / 2; case_.add(soubassement);
+
+const mur = ring(DOOR + DOOR_W, DOOR - DOOR_W + Math.PI * 2, R_IN, R_OUT, WALL_H, mat.banco, 'mur_banco');
+mur.position.y = FLOOR_Y; case_.add(mur);
+const linteau = ring(DOOR - DOOR_W, DOOR + DOOR_W, R_IN, R_OUT, WALL_H - DOOR_H, mat.banco, 'linteau');
+linteau.position.y = FLOOR_Y + DOOR_H; case_.add(linteau);
+// arête supérieure adoucie
+const couronne = mesh(new THREE.TorusGeometry((R_IN + R_OUT) / 2, (R_OUT - R_IN) / 2, 10, 72), mat.banco, 'couronne_mur');
+couronne.rotation.x = Math.PI / 2; couronne.position.y = FLOOR_Y + WALL_H; case_.add(couronne);
+
+// poutres de charpente traversant le mur (façon sahélienne)
+for (let i = 0; i < 12; i++) {
+  const a = i * (Math.PI * 2 / 12) + 0.26;
+  if (Math.abs(Math.atan2(Math.sin(a - DOOR), Math.cos(a - DOOR))) < DOOR_W + 0.12) continue;
+  const p = mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.34, 10), mat.bois, 'poutre_' + i);
+  p.rotation.z = Math.PI / 2; p.rotation.y = -a;
+  p.position.set(Math.cos(a) * (R_OUT + 0.06), FLOOR_Y + WALL_H - 0.30, Math.sin(a) * (R_OUT + 0.06));
+  case_.add(p);
+}
+
+// seuil + montants de porte
+const seuil = mesh(new THREE.BoxGeometry(0.92, 0.1, 0.5), mat.bancoSombre, 'seuil');
+seuil.position.set(0, 0.05, R_OUT + 0.08); case_.add(seuil);
+for (const s of [-1, 1]) {
+  const a = DOOR + s * DOOR_W;
+  const m2 = mesh(new THREE.CylinderGeometry(0.055, 0.06, DOOR_H + 0.1, 12), mat.bois, 'montant_porte_' + (s > 0 ? 'd' : 'g'));
+  m2.position.set(Math.cos(a) * (R_IN + 0.11), FLOOR_Y + DOOR_H / 2, Math.sin(a) * (R_IN + 0.11)); case_.add(m2);
+}
+// vantail de nattes posé contre le mur, dehors
+const vantail = mesh(new THREE.BoxGeometry(0.72, 1.24, 0.05), mat.natte, 'vantail_de_natte');
+vantail.position.set(0.95, 0.16 + 0.60, R_OUT - 0.30); vantail.rotation.set(0.13, -0.75, 0.05); case_.add(vantail);
+
+/* ── sol intérieur ────────────────────────────────────────── */
+const solInt = mesh(new THREE.CylinderGeometry(R_IN, R_IN, 0.04, 64), mat.solBattu, 'sol_de_terre_battue');
+solInt.position.y = FLOOR_Y + 0.02; case_.add(solInt);
+
+/* ── toit de chaume ───────────────────────────────────────── */
+const toit = new THREE.Group(); toit.name = 'toit_de_chaume';
+const EAVE = FLOOR_Y + WALL_H - 0.12;
+let base = EAVE;
+[[2.12, 1.52, 0.80], [1.52, 0.86, 0.92], [0.86, 0.20, 1.02]].forEach(([rb, rt, h], i) => {
+  const c = mesh(new THREE.CylinderGeometry(rt, rb, h, 56, 1, true), i === 1 ? mat.chaumeClair : mat.chaume, 'chaume_' + (i + 1));
+  c.material.side = THREE.DoubleSide;
+  c.position.y = base + h / 2; toit.add(c);
+  const lien = mesh(new THREE.TorusGeometry(rb * 0.99, 0.024, 8, 64), mat.corde, 'lien_' + (i + 1));
+  lien.rotation.x = Math.PI / 2; lien.position.y = base + 0.05; toit.add(lien);
+  base += h - 0.05;
+});
+const faite = mesh(new THREE.ConeGeometry(0.21, 0.34, 40), mat.chaume, 'faite_du_toit');
+faite.position.y = base + 0.22; toit.add(faite);
+const epi = mesh(new THREE.SphereGeometry(0.085, 16, 12), mat.terreCuite, 'epi_de_faitage');
+epi.position.y = base + 0.42; toit.add(epi);
+// frange de paille en bas de pente
+for (let i = 0; i < 72; i++) {
+  const a = i * (Math.PI * 2 / 72);
+  const b = mesh(new THREE.BoxGeometry(0.062, 0.2, 0.022), i % 2 ? mat.chaume : mat.chaumeClair, 'brin_' + i);
+  b.position.set(Math.cos(a) * 2.13, EAVE - 0.07, Math.sin(a) * 2.13);
+  b.rotation.set(0, -a, 0); b.rotateX(-0.5); toit.add(b);
+}
+// chevrons visibles de l'intérieur
+for (let i = 0; i < 14; i++) {
+  const a = i * (Math.PI * 2 / 14);
+  const ch = mesh(new THREE.CylinderGeometry(0.024, 0.018, 1.5, 8), mat.boisClair, 'chevron_' + i);
+  ch.position.set(Math.cos(a) * 0.86, EAVE + 0.36, Math.sin(a) * 0.86);
+  ch.rotation.set(0, -a, -0.86); toit.add(ch);
+}
+case_.add(toit);
+
+/* ── objets de la case ────────────────────────────────────── */
+const hs = {};
+function hotspot(id, label) {
+  const g = new THREE.Group(); g.name = id; g.userData = { hotspot: id, label };
+  hs[id] = g; case_.add(g); return g;
+}
+
+// foyer aux trois pierres
+const foyer = hotspot('foyer', 'le foyer aux trois pierres');
+foyer.position.set(-0.52, FLOOR_Y, -0.34);
+const cendres = mesh(new THREE.CylinderGeometry(0.36, 0.4, 0.04, 32), mat.cendre, 'cendres');
+cendres.position.y = 0.03; foyer.add(cendres);
+for (let i = 0; i < 3; i++) {
+  const a = i * (Math.PI * 2 / 3) + 0.4;
+  const p = mesh(new THREE.SphereGeometry(0.13, 16, 12), mat.pierre, 'pierre_du_foyer_' + (i + 1));
+  p.position.set(Math.cos(a) * 0.27, 0.09, Math.sin(a) * 0.27); p.scale.set(1, 0.85, 1.15); p.rotation.y = a; foyer.add(p);
+}
+const marmite = lathe([[0.02, 0], [0.13, 0.02], [0.2, 0.1], [0.21, 0.2], [0.16, 0.28], [0.18, 0.31]], mat.terreCuite, 'marmite');
+marmite.position.y = 0.19; foyer.add(marmite);
+for (let i = 0; i < 4; i++) {
+  const b = mesh(new THREE.CylinderGeometry(0.022, 0.018, 0.34, 8), mat.bois, 'buche_' + i);
+  b.position.set(-0.05 + i * 0.04, 0.05, 0); b.rotation.set(0, i * 0.7, Math.PI / 2 - 0.1); foyer.add(b);
+}
+
+// mortier et pilon
+const mortier = hotspot('mortier', 'le mortier et son pilon');
+mortier.position.set(0.86, FLOOR_Y, -0.22);
+const cuve = lathe([[0.02, 0], [0.14, 0.01], [0.1, 0.12], [0.115, 0.34], [0.175, 0.5], [0.18, 0.53], [0.135, 0.5], [0.12, 0.28]], mat.bois, 'mortier_de_bois');
+mortier.add(cuve);
+const pilon = mesh(new THREE.CylinderGeometry(0.036, 0.045, 0.98, 12), mat.boisClair, 'pilon');
+pilon.position.set(0.16, 0.5, 0.12); pilon.rotation.set(0.34, 0, 0.42); mortier.add(pilon);
+const mil = mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.03, 20), mat.calebasse, 'farine_de_mil');
+mil.position.y = 0.44; mortier.add(mil);
+
+// canaris (jarres d'eau)
+const jarres = hotspot('jarre', 'les canaris de terre cuite');
+jarres.position.set(-1.02, FLOOR_Y, 0.62);
+const jp = [[0.02, 0], [0.15, 0.03], [0.25, 0.14], [0.27, 0.3], [0.21, 0.44], [0.14, 0.5], [0.17, 0.54]];
+const j1 = lathe(jp, mat.terreCuite, 'canari_1'); jarres.add(j1);
+const j2 = lathe(jp, mat.terreCuite, 'canari_2'); j2.scale.setScalar(0.74); j2.position.set(-0.34, 0, -0.3); jarres.add(j2);
+const couvercle = mesh(new THREE.CylinderGeometry(0.13, 0.1, 0.03, 24), mat.terreCuite, 'couvercle');
+couvercle.position.set(-0.34, 0.42, -0.3); jarres.add(couvercle);
+const louche = lathe([[0.005, 0], [0.09, 0.005], [0.085, 0.06]], mat.calebasse, 'louche_calebasse');
+louche.position.set(0.22, 0.02, 0.16); jarres.add(louche);
+
+// djembé
+const djembe = hotspot('djembe', 'le djembé du griot');
+djembe.position.set(0.92, FLOOR_Y, 0.72);
+const fut = lathe([[0.005, 0], [0.1, 0.01], [0.088, 0.14], [0.072, 0.32], [0.095, 0.44], [0.14, 0.54], [0.163, 0.6]], mat.bois, 'fut_du_djembe');
+djembe.add(fut);
+const peau = mesh(new THREE.CylinderGeometry(0.168, 0.168, 0.014, 32), mat.peau, 'peau_de_chevre');
+peau.position.y = 0.605; djembe.add(peau);
+const cercle = mesh(new THREE.TorusGeometry(0.166, 0.012, 8, 32), mat.corde, 'cercle_de_tension');
+cercle.rotation.x = Math.PI / 2; cercle.position.y = 0.6; djembe.add(cercle);
+const cercle2 = mesh(new THREE.TorusGeometry(0.1, 0.01, 8, 32), mat.corde, 'cercle_bas');
+cercle2.rotation.x = Math.PI / 2; cercle2.position.y = 0.4; djembe.add(cercle2);
+for (let i = 0; i < 12; i++) {
+  const a = i * (Math.PI * 2 / 12);
+  const t = mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.21, 6), mat.corde, 'tirant_' + i);
+  t.position.set(Math.cos(a) * 0.132, 0.5, Math.sin(a) * 0.132); t.rotation.set(0, -a, 0.16); djembe.add(t);
+}
+
+// masque accroché au mur
+const masque = hotspot('masque', 'le masque des ancêtres');
+masque.position.set(0.12, FLOOR_Y + 1.18, -1.42);
+const face = mesh(new THREE.SphereGeometry(0.2, 28, 20), mat.masque, 'face_du_masque');
+face.scale.set(0.82, 1.5, 0.42); masque.add(face);
+for (const s of [-1, 1]) {
+  const o = mesh(new THREE.SphereGeometry(0.032, 12, 10), mat.ombre, 'oeil_' + (s > 0 ? 'd' : 'g'));
+  o.position.set(s * 0.072, 0.07, 0.075); o.scale.z = 0.5; masque.add(o);
+  const c = mesh(new THREE.ConeGeometry(0.028, 0.2, 10), mat.masque, 'corne_' + (s > 0 ? 'd' : 'g'));
+  c.position.set(s * 0.1, 0.31, 0.01); c.rotation.z = -s * 0.3; masque.add(c);
+}
+const nez = mesh(new THREE.BoxGeometry(0.045, 0.19, 0.07), mat.masque, 'nez_du_masque');
+nez.position.set(0, -0.01, 0.08); masque.add(nez);
+const bouche = mesh(new THREE.BoxGeometry(0.09, 0.028, 0.05), mat.ombre, 'bouche_du_masque');
+bouche.position.set(0, -0.16, 0.08); masque.add(bouche);
+const clou = mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.1, 8), mat.bois, 'cheville_murale');
+clou.rotation.x = Math.PI / 2; clou.position.set(0, 0.32, -0.06); masque.add(clou);
+
+// décors (leurres)
+const tabouret = hotspot('tabouret', 'le tabouret sculpté');
+tabouret.position.set(-0.62, FLOOR_Y, 0.98);
+const assise = mesh(new THREE.CylinderGeometry(0.17, 0.155, 0.05, 28), mat.bois, 'assise');
+assise.position.y = 0.3; tabouret.add(assise);
+for (let i = 0; i < 3; i++) {
+  const a = i * (Math.PI * 2 / 3);
+  const l = mesh(new THREE.CylinderGeometry(0.026, 0.022, 0.3, 10), mat.bois, 'pied_' + i);
+  l.position.set(Math.cos(a) * 0.1, 0.15, Math.sin(a) * 0.1); tabouret.add(l);
+}
+
+const awale = hotspot('awale', 'le jeu d’awalé');
+awale.position.set(0.18, FLOOR_Y + 0.04, 1.02);
+const plateau = mesh(new THREE.BoxGeometry(0.52, 0.07, 0.2), mat.boisClair, 'plateau_awale');
+plateau.position.y = 0.035; awale.add(plateau);
+for (let i = 0; i < 12; i++) {
+  const c = mesh(new THREE.SphereGeometry(0.032, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat.ombre, 'godet_' + i);
+  c.position.set(-0.21 + (i % 6) * 0.084, 0.069, i < 6 ? -0.045 : 0.045); c.scale.y = 0.5; awale.add(c);
+}
+
+const natteRoulee = hotspot('natte', 'la natte roulée');
+natteRoulee.position.set(1.02, FLOOR_Y + 0.12, -0.86);
+const rouleau = mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.94, 24), mat.natte, 'natte_roulee');
+rouleau.rotation.set(0, 0.5, Math.PI / 2); natteRoulee.add(rouleau);
+const sangle = mesh(new THREE.TorusGeometry(0.114, 0.012, 8, 20), mat.tissu, 'sangle');
+sangle.rotation.set(0, 0.5, 0); sangle.position.set(0.2, 0, -0.1); natteRoulee.add(sangle);
+
+const calebasses = hotspot('calebasse', 'les calebasses');
+calebasses.position.set(-1.24, FLOOR_Y, -0.58);
+[[0, 0, 0.17], [0.28, 0.16, 0.13]].forEach(([x, z, r], i) => {
+  const c = lathe([[0.02, 0], [r * 0.8, 0.02], [r, r * 0.55], [r * 0.86, r * 0.95], [r * 0.9, r]], mat.calebasse, 'calebasse_' + (i + 1));
+  c.position.set(x, 0, z); calebasses.add(c);
+});
+
+/* ── le trésor, sous le foyer ─────────────────────────────── */
+const tresor = new THREE.Group(); tresor.name = 'tresor'; tresor.visible = false;
+tresor.position.set(-0.52, FLOOR_Y, -0.34);
+const fosse = mesh(new THREE.CylinderGeometry(0.34, 0.28, 0.26, 32, 1, true), mat.ombre, 'fosse');
+fosse.material.side = THREE.DoubleSide; fosse.position.y = -0.1; tresor.add(fosse);
+const fond = mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.02, 32), mat.ombre, 'fond_de_fosse');
+fond.position.y = -0.22; tresor.add(fond);
+const potTresor = lathe([[0.02, 0], [0.13, 0.02], [0.2, 0.11], [0.21, 0.22], [0.15, 0.3], [0.16, 0.33]], mat.terreCuite, 'jarre_au_tresor');
+potTresor.position.y = -0.2; tresor.add(potTresor);
+const orTas = mesh(new THREE.SphereGeometry(0.15, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat.or, 'poudre_dor');
+orTas.position.y = 0.09; orTas.scale.y = 0.45; tresor.add(orTas);
+for (let i = 0; i < 22; i++) {
+  const a = i * 1.7, r = 0.05 + (i % 5) * 0.032;
+  const c = mesh(new THREE.SphereGeometry(0.028, 12, 10), i % 3 ? mat.cauri : mat.or, 'cauri_' + i);
+  c.position.set(Math.cos(a) * r, 0.1 + (i % 3) * 0.018, Math.sin(a) * r);
+  c.scale.set(1, 0.55, 0.72); c.rotation.y = a; tresor.add(c);
+}
+case_.add(tresor);
+
+stage.setObject(case_);
+
+/* ── la chasse au trésor ──────────────────────────────────── */
+const indices = [
+  { id: 'djembe', texte: 'Rien ne commence avant que la peau ne parle. Le griot frappe trois fois pour ouvrir la palabre&nbsp;: touche ce qui appelle le village.', ref: 'Le djembé mandingue, tambour du griot (Mali, Guinée).' },
+  { id: 'mortier', texte: 'Avant le soleil, les femmes chantent en cadence&nbsp;: le grain tombe, le bois répond. Cherche ce bois qui a mangé plus de mil que le village entier.', ref: 'Le mortier et le pilon — le mil et le fonio du Sahel.' },
+  { id: 'jarre', texte: 'La terre cuite boit le vent et rend l’eau plus fraîche que la pluie. La plus petite est fermée&nbsp;: c’est elle qui garde le mot suivant.', ref: 'Le canari, jarre poreuse qui refroidit l’eau par évaporation.' },
+  { id: 'masque', texte: 'Un visage ne dort jamais dans la case. Il ne montre pas le chemin — il montre l’endroit&nbsp;: suis son regard vers le bas.', ref: 'Les masques d’ancêtres dogon et sénoufo, gardiens du seuil.' },
+  { id: 'foyer', texte: 'Trois pierres, trois sœurs, un seul feu. Ce que la cendre couvre, la cendre le protège&nbsp;: sous elles dort l’or de Wagadou.', ref: 'Les trois pierres du foyer et l’empire du Wagadou (Ghana), pays de l’or.' },
+];
+const noms = { djembe: 'le djembé', mortier: 'le mortier', jarre: 'les canaris', masque: 'le masque', foyer: 'le foyer', tabouret: 'le tabouret', awale: 'l’awalé', natte: 'la natte', calebasse: 'les calebasses' };
+const echecs = [
+  'Karfa sourit dans le vent&nbsp;: ce n’est pas là. Relis l’indice.',
+  'Le village se moque gentiment. Autre chose, écoute mieux.',
+  'Non. Un objet de la case parle dans l’indice — lequel&nbsp;?',
+];
+
+let etape = 0, ouvert = false, rate = 0;
+const list = document.getElementById('list'), statut = document.getElementById('status'), win = document.getElementById('win');
+
+function marqueur(g) {
+  const anneau = mesh(new THREE.TorusGeometry(0.34, 0.014, 8, 40), mat.or, 'marque_' + g.name);
+  anneau.rotation.x = Math.PI / 2; anneau.position.y = 0.012; anneau.userData.marque = true;
+  anneau.castShadow = false; g.add(anneau);
+}
+
+function rendu() {
+  list.innerHTML = indices.map((c, i) => {
+    const etat = i < etape ? 'found' : i === etape ? 'active' : 'locked';
+    const corps = i <= etape
+      ? `${c.texte}<span class="ref">${c.ref}</span>`
+      : 'Indice scellé — trouve le précédent.';
+    return `<li class="${etat}"><span class="num">${String(i + 1).padStart(2, '0')}</span><p class="ctxt">${corps}</p></li>`;
+  }).join('');
+  win.style.display = etape >= indices.length ? 'block' : 'none';
+}
+
+function toucher(id) {
+  if (etape >= indices.length) { statut.innerHTML = 'Le trésor est déjà au jour. Fais-en bon usage.'; return; }
+  if (!ouvert) { statut.innerHTML = 'Soulève d’abord le toit de chaume pour voir l’intérieur.'; return; }
+  if (id === indices[etape].id) {
+    marqueur(hs[id]); etape++; rate = 0;
+    if (etape >= indices.length) {
+      tresor.visible = true;
+      hs.foyer.children.forEach(c => { if (c.name.startsWith('cendres') || c.name.startsWith('buche') || c.name === 'marmite') c.visible = false; });
+      statut.innerHTML = 'La cendre glisse, la terre cède&nbsp;: la jarre de Karfa est là.';
+    } else {
+      statut.innerHTML = `Juste — ${noms[id]}. L’indice ${String(etape + 1).padStart(2, '0')} s’ouvre.`;
+    }
+    rendu();
+  } else {
+    statut.innerHTML = echecs[rate++ % echecs.length];
+  }
+}
+
+/* toit */
+const toitY0 = 0, toitY1 = 4.6;
+document.getElementById('roof').addEventListener('click', () => {
+  ouvert = !ouvert;
+  document.getElementById('roof').textContent = ouvert ? 'Reposer le toit' : 'Soulever le toit';
+  anime(ouvert);
+  if (ouvert && etape === 0) statut.innerHTML = 'Le premier indice t’attend. Touche l’objet dont il parle.';
+});
+function anime(up) {
+  const cam = stage._camera, ctr = stage._controls;
+  const p0 = cam.position.clone(), t0 = ctr.target.clone();
+  const p1 = up ? new THREE.Vector3(3.6, 4.6, 4.2) : new THREE.Vector3(4.4, 2.2, 5.2);
+  const t1 = up ? new THREE.Vector3(0, 0.7, 0) : new THREE.Vector3(0, 1.6, 0);
+  toit.traverse(o => { if (o.isMesh) o.castShadow = !up; });
+  const y0 = toit.position.y, y1 = up ? toitY1 : toitY0, t = performance.now();
+  (function step() {
+    const k = Math.min(1, (performance.now() - t) / 900), e = k < 0.5 ? 2 * k * k : 1 - 2 * (1 - k) ** 2;
+    toit.position.y = y0 + (y1 - y0) * e;
+    cam.position.lerpVectors(p0, p1, e); ctr.target.lerpVectors(t0, t1, e);
+    if (k < 1) requestAnimationFrame(step);
+  })();
+}
+
+document.getElementById('reset').addEventListener('click', () => {
+  etape = 0; rate = 0; tresor.visible = false;
+  Object.values(hs).forEach(g => [...g.children].forEach(c => { if (c.userData.marque) g.remove(c); }));
+  hs.foyer.children.forEach(c => { c.visible = true; });
+  statut.innerHTML = ouvert ? 'On reprend au premier indice.' : 'Soulève le toit pour entrer.';
+  rendu();
+});
+
+/* pointeur */
+const dom = stage._renderer.domElement, ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const tip = document.getElementById('tip');
+function cible(ev) {
+  const r = dom.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, stage._camera);
+  const hit = ray.intersectObjects(Object.values(hs), true)[0];
+  if (!hit) return null;
+  let o = hit.object;
+  while (o && !o.userData.hotspot) o = o.parent;
+  return o;
+}
+let down = null;
+dom.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
+dom.addEventListener('pointerup', e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y); down = null;
+  if (moved > 6) return;
+  const o = cible(e); if (o) toucher(o.userData.hotspot);
+});
+dom.addEventListener('pointermove', e => {
+  const o = ouvert ? cible(e) : null;
+  dom.style.cursor = o ? 'pointer' : '';
+  tip.style.opacity = o ? '1' : '0';
+  if (o) { tip.textContent = o.userData.label; tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; }
+});
+
+rendu();
+</script>
+</body>
+</html>
