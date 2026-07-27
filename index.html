@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le village de Naba — 30 jeux</title>
+<link rel="stylesheet" href="_ds/classical-9af83fcb-e414-4ae4-b793-a669f9333310/styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<style>
+  three-d-stage:not(:defined){visibility:hidden}
+  html,body{height:100%}
+  body{margin:0;overflow:hidden;background:var(--color-bg);color:var(--color-text)}
+  three-d-stage{position:fixed;top:0;right:0;bottom:0;left:404px;width:auto;height:100vh}
+  @media (max-width:900px){three-d-stage{left:0}}
+
+  #hud{
+    position:fixed;top:var(--space-4);left:var(--space-4);width:356px;
+    max-height:calc(100vh - var(--space-4) * 2);overflow:auto;
+    background:color-mix(in srgb, var(--color-bg) 94%, transparent);
+    backdrop-filter:blur(3px);border:1px solid var(--color-divider);
+    border-radius:var(--radius-md);padding:var(--space-6);box-shadow:var(--shadow-md)
+  }
+  .kicker{
+    font-family:var(--font-heading);font-feature-settings:"tnum";
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--color-accent-700);margin:0 0 var(--space-2);
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-2)
+  }
+  #hud h1{font-size:30px;font-weight:400;margin:0;line-height:1.08}
+  .lieu{font-size:12px;font-style:italic;margin:var(--space-1) 0 0;
+        color:color-mix(in srgb,var(--color-text) 58%,transparent)}
+  .vies{display:flex;gap:6px;align-items:center}
+  .vie{width:10px;height:10px;border-radius:50%;background:var(--color-accent)}
+  .vie.perdue{background:transparent;border:1px solid var(--color-neutral-400)}
+  .barre{display:flex;gap:var(--space-2);align-items:center;margin:var(--space-4) 0 0}
+  .pas{width:11px;height:11px;border-radius:50%;border:1px solid var(--color-accent)}
+  .pas.on{background:var(--color-accent)}
+  #consigne{font-size:14px;line-height:1.66;text-align:justify;hyphens:auto;margin:0}
+  #note{display:block;font-size:11.5px;font-style:italic;margin-top:var(--space-2);
+        color:color-mix(in srgb,var(--color-text) 55%,transparent)}
+  #actions{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-4)}
+  #say{font-size:13px;font-style:italic;min-height:3.1em;margin:var(--space-4) 0 0;
+       text-align:justify;color:color-mix(in srgb,var(--color-text) 72%,transparent)}
+  .pied{display:flex;gap:var(--space-2);margin-top:var(--space-4);flex-wrap:wrap}
+
+  #veil{position:fixed;inset:0;display:none;place-items:center;z-index:20;padding:var(--space-6);
+        background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);backdrop-filter:blur(2px);
+        overflow:auto}
+  #veil.on{display:grid}
+  #sheet{width:min(1020px,calc(100vw - var(--space-8)));background:var(--color-bg);
+         border:1px solid var(--color-divider);border-radius:var(--radius-md);
+         padding:var(--space-8);box-shadow:var(--shadow-lg)}
+  #sheet h2{font-size:36px;font-weight:400;margin:0 0 var(--space-2)}
+  #sheet p{font-size:14.5px;line-height:1.68;text-align:justify;hyphens:auto;margin:0 0 var(--space-3)}
+  #sheet ol,#sheet ul{font-size:14px;line-height:1.7;margin:0 0 var(--space-4);padding-left:var(--space-6)}
+  .sheet-actions{display:flex;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-4)}
+  .numeral{font-family:var(--font-heading);font-feature-settings:"tnum";font-size:60px;line-height:1;
+           color:color-mix(in srgb,var(--color-accent) 34%,transparent);display:block;margin-bottom:var(--space-2)}
+  .valeur{font-family:var(--font-heading);font-size:20px;color:var(--color-accent-700);
+          margin:var(--space-4) 0 0;padding-top:var(--space-3);border-top:1px solid var(--color-divider)}
+
+  /* carte du village */
+  #carte-svg{width:100%;height:auto;display:block;margin:var(--space-4) 0 var(--space-2)}
+  .lvl{cursor:pointer}
+  .lvl circle{transition:fill .25s,stroke .25s,r .2s}
+  .lvl .anneau{fill:none;stroke:var(--color-neutral-400);stroke-width:1.5}
+  .lvl text{font-family:var(--font-heading);font-feature-settings:"tnum";font-size:12px;
+            fill:var(--color-neutral-500);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .lvl.ouvert .anneau{fill:#6d8a3c;stroke:#4f6b2c}
+  .lvl.ouvert text{fill:#f8f4f4}
+  .lvl.faite .anneau{fill:#4f6b2c;stroke:#3c5220}
+  .lvl.faite text{fill:#f8f4f4}
+  .lvl.courante .anneau{stroke:var(--color-accent);stroke-width:3}
+  .lvl.verrou{cursor:not-allowed}
+  .lvl.verrou .anneau{fill:var(--color-neutral-200)}
+  .lvl:not(.verrou):hover .anneau{stroke:var(--color-accent);stroke-width:3}
+  #legende{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:center;
+           font-size:11.5px;color:color-mix(in srgb,var(--color-text) 58%,transparent);
+           padding-top:var(--space-2);border-top:1px solid var(--color-divider)}
+  #legende span{display:flex;gap:6px;align-items:center}
+  #legende i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  #survol{font-family:var(--font-heading);font-size:19px;min-height:1.6em;margin:0;
+          color:var(--color-text)}
+  #survol em{font-family:var(--font-body);font-size:12.5px;font-style:italic;
+             color:color-mix(in srgb,var(--color-text) 55%,transparent)}
+
+  #tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;z-index:6;
+       font-family:var(--font-heading);font-size:13px;padding:3px 9px;
+       background:var(--color-neutral-900);color:var(--color-neutral-100);
+       border-radius:var(--radius-sm);transform:translate(12px,-28px)}
+  #confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:25}
+  .cauri{position:absolute;top:-24px;width:13px;height:9px;border-radius:50%;
+         background:var(--color-accent);animation:tombe linear forwards}
+  .cauri.pale{background:#efe4cf}
+  @keyframes tombe{from{transform:translateY(0) rotate(0)} to{transform:translateY(105vh) rotate(540deg)}}
+</style>
+<style id="parure">
+  /* ── Parure du village : palette de terre, tissages, or ── */
+  :root{
+    --sable:#f4e9d7; --sable2:#efdfc6; --banco:#c98f57; --terre:#b0653a;
+    --chaume:#d8b25c; --feuille:#6d8a3c; --feuille2:#3f5528; --indigo:#2b3c52;
+    --encre:#241c14; --or:#b68235; --or-clair:#e8c27a;
+    --b1:#2b3c52; --b2:#b0653a; --b3:#d8b25c;
+    --fond1:#fdf7ec; --fond2:#eadcc2;
+  }
+  #defi{display:block;width:fit-content;max-width:100%;margin:var(--space-3) 0 0;
+        padding:4px 11px;line-height:1.35;
+        white-space:nowrap;font-family:var(--font-heading);font-size:11px;letter-spacing:.08em;
+        text-transform:uppercase;color:var(--or);
+        border:1px solid color-mix(in srgb,var(--or) 55%,transparent);
+        border-radius:999px}
+  body.sombre #defi{color:var(--or-clair);border-color:color-mix(in srgb,var(--or-clair) 55%,transparent)}
+  body{background:radial-gradient(120% 90% at 78% 8%, var(--fond1) 0%, var(--fond2) 100%);
+       color:var(--encre);transition:background .9s ease,color .9s ease}
+  three-d-stage{border-left:1px solid color-mix(in srgb,var(--or) 35%,transparent)}
+
+  #hud,#sheet{
+    position:relative;overflow:hidden;
+    background:linear-gradient(180deg,#fdf7ec 0%,var(--sable) 100%);
+    border:1px solid color-mix(in srgb,var(--or) 42%,transparent);
+    box-shadow:0 1px 0 #fff inset, 0 14px 34px -18px rgba(60,38,16,.45)
+  }
+  #hud{padding-top:calc(var(--space-6) + 12px)}
+  #sheet{padding-top:calc(var(--space-8) + 14px)}
+  #hud::before,#sheet::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:12px;
+    background:
+      repeating-linear-gradient(90deg,
+        var(--b1) 0 9px, var(--sable) 9px 13px,
+        var(--b2) 13px 22px, var(--sable) 22px 26px,
+        var(--b3) 26px 33px, var(--sable) 33px 37px);
+    border-bottom:1px solid color-mix(in srgb,var(--or) 45%,transparent)
+  }
+  #hud .kicker,.kicker{color:var(--indigo);letter-spacing:.16em}
+  #hud h1{color:var(--encre);letter-spacing:-.01em}
+  #hud h1::after{content:"";display:block;width:52px;height:2px;margin-top:var(--space-2);
+                 background:linear-gradient(90deg,var(--or),transparent)}
+  .lieu{color:color-mix(in srgb,var(--encre) 62%,transparent)}
+  .vies{gap:5px}
+  .vie{width:14px;height:11px;border-radius:50%;position:relative;
+       background:linear-gradient(180deg,#fff8ea,#e2ccA5);
+       box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--or) 70%,transparent)}
+  .vie::after{content:"";position:absolute;inset:3px 4px;border-radius:50%;
+              background:color-mix(in srgb,var(--terre) 75%,transparent)}
+  .vie.perdue{background:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--encre) 22%,transparent)}
+  .vie.perdue::after{display:none}
+  .pas{border-color:color-mix(in srgb,var(--or) 60%,transparent)}
+  .pas.on{background:var(--or)}
+  .hr{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--or) 55%,transparent),transparent)}
+  #consigne{font-size:14.5px}
+  #note,#say{color:color-mix(in srgb,var(--encre) 62%,transparent)}
+  .btn-primary{color:#6f4a0d;border-color:var(--or);background:#fffaf0}
+  .btn-primary:hover{background:#fdf0d8}
+  .btn-secondary{border-color:color-mix(in srgb,var(--encre) 22%,transparent);background:#fffdf8}
+  .btn-secondary:hover{background:#f7ecd9}
+  #sheet h2{color:var(--encre)}
+  .numeral{color:color-mix(in srgb,var(--or) 46%,transparent)}
+  .valeur{color:#6f4a0d;border-top-color:color-mix(in srgb,var(--or) 45%,transparent)}
+  #veil{background:color-mix(in srgb,#2a1c0e 66%,transparent)}
+
+  /* ── la carte ── */
+  #cartouche{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-4);
+             border-bottom:1px solid color-mix(in srgb,var(--or) 45%,transparent);
+             padding-bottom:var(--space-2);margin-bottom:var(--space-3)}
+  #cartouche p{margin:0;font-size:13px;font-style:italic;
+               color:color-mix(in srgb,var(--encre) 60%,transparent)}
+  #carte-svg{width:100%;height:auto;display:block;margin:0 0 var(--space-3)}
+  .lvl circle,.lvl text{transition:fill .25s,stroke .25s}
+  .lvl .plaque{fill:#e4d4b8;stroke:#a98a5c;stroke-width:1.5}
+  .lvl .anneau{fill:none;stroke:none}
+  .lvl text{font-family:var(--font-heading);font-feature-settings:"tnum";font-size:16px;
+            font-weight:600;fill:#8a7147;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .lvl.ouvert .plaque{fill:#6d8a3c;stroke:#40542a}
+  .lvl.ouvert text{fill:#f7f2e4}
+  .lvl.faite .plaque{fill:#3f5528;stroke:#2c3c1c}
+  .lvl.faite text{fill:#e8c27a}
+  .lvl.courante .plaque{stroke:var(--or);stroke-width:3.5}
+  .lvl.courante .halo{fill:none;stroke:var(--or-clair);stroke-width:1.5;opacity:.9}
+  .lvl:not(.verrou){cursor:pointer}
+  .lvl.verrou{cursor:not-allowed}
+  .lvl:not(.verrou):hover .plaque{stroke:var(--or);stroke-width:3.5}
+  #legende{border-top:1px solid color-mix(in srgb,var(--or) 40%,transparent);
+           color:color-mix(in srgb,var(--encre) 60%,transparent)}
+  #legende i{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+  #survol{color:var(--encre)}
+  #survol em{color:color-mix(in srgb,var(--encre) 58%,transparent)}
+
+  /* ── nuit ── */
+  body.sombre{color:#eadfcd}
+  body.sombre #hud,body.sombre #sheet{
+    background:linear-gradient(180deg,#241b13 0%,#1a1410 100%);
+    border-color:color-mix(in srgb,var(--or) 50%,transparent);color:#eadfcd;
+    box-shadow:0 14px 34px -18px rgba(0,0,0,.7)}
+  body.sombre #hud h1,body.sombre #sheet h2{color:#f6ecd9}
+  body.sombre .kicker{color:var(--or-clair)}
+  body.sombre .lieu,body.sombre #note,body.sombre #say{color:color-mix(in srgb,#eadfcd 62%,transparent)}
+  body.sombre .btn{color:#f2e7d4}
+  body.sombre .btn-primary{color:#f0c987;border-color:var(--or);background:rgba(182,130,53,.12)}
+  body.sombre .btn-primary:hover{background:rgba(182,130,53,.24)}
+  body.sombre .btn-secondary{border-color:rgba(234,223,205,.26);background:rgba(234,223,205,.06)}
+  body.sombre .btn-secondary:hover{background:rgba(234,223,205,.14)}
+  body.sombre .vie{background:linear-gradient(180deg,#f6ecd9,#c9ab7c)}
+  body.sombre .pas{border-color:var(--or-clair)}
+  body.sombre .pas.on{background:var(--or-clair)}
+  body.sombre .valeur{color:#f0c987}
+  body.sombre .numeral{color:color-mix(in srgb,var(--or-clair) 40%,transparent)}
+  body.sombre #veil{background:color-mix(in srgb,#000 72%,transparent)}
+  body.sombre .text-muted{color:color-mix(in srgb,#eadfcd 52%,transparent)}
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#efe9df">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#efe9df"/>
+    <ellipse cx="600" cy="650" rx="380" ry="56" fill="#b56a3c"/>
+    <rect x="440" y="430" width="320" height="190" rx="10" fill="#c98f57"/>
+    <path d="M600 190 L830 430 L370 430 Z" fill="#d0a862"/>
+    <circle cx="290" cy="470" r="80" fill="#6d8a3c"/><rect x="280" y="470" width="20" height="150" fill="#6d4a2b"/>
+    <circle cx="910" cy="470" r="80" fill="#4f6b2c"/><rect x="900" y="470" width="20" height="150" fill="#6d4a2b"/>
+    <circle cx="600" cy="560" r="28" fill="none" stroke="#b68235" stroke-width="10"/>
+  </svg>
+</template>
+
+<three-d-stage name="village-de-naba" background="#f1e3c9"></three-d-stage>
+
+<aside id="hud">
+  <p class="kicker"><span id="lvl">Niveau 01</span><span class="vies" id="vies"></span></p>
+  <h1 id="titre">Le village de Naba</h1>
+  <p class="lieu" id="lieu">La case de Karfa</p>
+  <span id="defi">Défi</span>
+  <div class="barre" id="barre"></div>
+  <hr class="hr">
+  <p id="consigne">—<span id="note"></span></p>
+  <div id="actions"></div>
+  <p id="say">Ouvre la carte du village pour commencer.</p>
+  <div class="pied">
+    <button class="btn btn-secondary" id="btn-carte" type="button">Carte du village</button>
+    <button class="btn btn-ghost" id="btn-rejouer" type="button">Recommencer le niveau</button>
+  </div>
+</aside>
+
+<div id="tip"></div>
+<div id="confetti"></div>
+<div id="veil"><div id="sheet"></div></div>
+
+<script src="./three-d-stage.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { LIEUX, buildNaba, mat, mesh } from './village-lieux.js';
+
+const stage = document.querySelector('three-d-stage');
+await stage.ready;
+stage.shadowRoot.querySelectorAll('.toolbar,.note').forEach(n => n.remove());
+
+/* ═══════ le catalogue des jeux ═══════ */
+const TOUS = [
+  { n: 1, lieu: 'case', titre: 'Les cinq indices', mec: 'trouve', valeur: 'Le partage',
+    intro: 'Le vieux Karfa a laissé un trésor sous sa case. Il a caché cinq indices dans la maison. Naba cherche pour toi : touche l’objet dont parle l’indice.',
+    etapes: [
+      { id: 'djembe', t: 'Le griot frappe dessus pour appeler tout le village. Sa peau parle avant les hommes.', r: 'Le djembé, tambour du Mali et de la Guinée.' },
+      { id: 'jarre', t: 'Elle est en terre cuite, elle garde l’eau bien fraîche même quand le soleil tape fort.', r: 'Le canari : l’eau s’évapore un peu et refroidit la jarre.' },
+      { id: 'mortier', t: 'Chaque matin, le bois chante&nbsp;: le grain tombe dedans et ressort en farine.', r: 'Le mortier et le pilon — le mil du Sahel.' },
+      { id: 'masque', t: 'Un visage de bois accroché au mur&nbsp;: il ne dort jamais et il garde la case.', r: 'Le masque des ancêtres, gardien de la maison.' },
+      { id: 'foyer', t: 'Trois pierres, un seul feu. C’est ici qu’on partage le repas du soir.', r: 'Les trois pierres du foyer, autour desquelles la famille se réunit.' },
+    ] },
+  { n: 2, lieu: 'case', titre: 'Le tambour parleur', mec: 'memoire', valeur: 'Le respect des aînés', nuit: true,
+    intro: 'La nuit est tombée, le feu brûle dans le foyer. Le griot joue du tama, le tambour qui parle&nbsp;: il nomme les objets un par un. Écoute bien, puis refais le même ordre avec Naba.',
+    pool: ['djembe', 'mortier', 'jarre', 'masque', 'tabouret'], manches: [3, 4],
+    note: 'Le tama, tambour parleur wolof et mandingue, portait les messages de village en village.' },
+  { n: 3, lieu: 'champ', titre: 'Les épis mûrs', mec: 'compte', valeur: 'L’entraide',
+    intro: 'Au champ, on s’aide pour la récolte. Compte bien avant de répondre : Naba ne veut pas se tromper devant sa maman.',
+    questions: [
+      { q: 'Combien d’épis de mil sont mûrs (les dorés) ?', options: ['5', '7', '9'], bonne: 1, spot: 'epis_murs',
+        note: 'Le mil mûr change de couleur : on le lie avant de le couper.' },
+      { q: 'Combien d’oiseaux voleurs sont posés sur le champ ?', options: ['2', '3', '4'], bonne: 1, spot: 'oiseaux',
+        note: 'Les tisserins adorent le mil : les enfants les chassent toute la journée.' },
+      { q: 'Combien de sillons ont été tracés dans la terre ?', options: ['4', '5', '6'], bonne: 1,
+        note: 'On trace les sillons à la daba, la houe du Sahel.' },
+    ] },
+  { n: 4, lieu: 'enclos', titre: 'Le chevreau perdu', mec: 'cache', valeur: 'L’amour des bêtes',
+    intro: 'Un petit chevreau s’est caché dans l’enclos. Les cachettes possibles brillent en doré&nbsp;: touche celle que tu choisis, Naba va regarder.',
+    manches: [2, 3], bete: 'le chevreau',
+    note: 'Dans le village, chaque bête a un nom : on ne perd jamais un chevreau.' },
+  { n: 5, lieu: 'baobab', titre: 'Les questions du vieux', mec: 'quiz', valeur: 'Le pardon',
+    intro: 'Sous l’arbre à palabres, on discute et on se pardonne. Le vieux Sanou pose quatre questions à Naba. Réponds pour lui.',
+    questions: [
+      { q: 'Quel instrument à cordes est fait d’une grande calebasse ?', options: ['La kora', 'Le djembé', 'Le balafon'], bonne: 0, spot: 'kora',
+        note: 'La kora a 21 cordes ; le griot mandingue en joue depuis des siècles.' },
+      { q: 'À quoi sert le bâton de parole ?', options: ['À taper le tambour', 'À montrer qui a le droit de parler', 'À garder les chèvres'], bonne: 1, spot: 'baton',
+        note: 'Celui qui tient le bâton parle ; les autres écoutent. Ainsi personne ne se coupe la parole.' },
+      { q: 'Comment appelle-t-on le jeu de graines et de godets ?', options: ['L’awalé', 'Le wari-wari', 'Le tarot'], bonne: 0, spot: 'awale',
+        note: 'L’awalé (ou awélé) se joue avec 48 graines dans 12 godets.' },
+      { q: 'Que donne le baobab qu’on mange et qu’on boit ?', options: ['Des noix de coco', 'Le fruit du singe, le pain de singe', 'Des dattes'], bonne: 1,
+        note: 'Le pain de singe : la pulpe du fruit du baobab, riche en vitamine C.' },
+    ] },
+  // ── lots suivants ──
+  { n: 6, lieu: 'marche', titre: 'Le troc au marché', mec: 'troc', valeur: 'La générosité',
+    intro: 'Au marché, on ne se dispute pas : on échange, et quand on peut, on donne un peu plus. Aide Naba à compter juste — la vendeuse le regarde en souriant.',
+    questions: [
+      { q: 'Deux mesures de mil valent 6 cauris. Combien de cauris pour trois mesures ?', options: ['8', '9', '12'], bonne: 1, spot: 'mil',
+        note: 'Les cauris ont servi de monnaie en Afrique de l’Ouest pendant des siècles.' },
+      { q: 'La vendeuse donne 4 poignées d’arachides pour 1 cauri. Combien de poignées pour 3 cauris ?', options: ['7', '12', '15'], bonne: 1, spot: 'arachide',
+        note: 'L’arachide se vend en poignées, mesurées à la calebasse.' },
+      { q: 'Un pagne indigo coûte 10 cauris. Naba en a 7, sa maman lui en donne 4. Que se passe-t-il ?', options: ['Il l’achète et garde 1 cauri', 'Il lui manque 1 cauri', 'Il n’a pas assez du tout'], bonne: 0, spot: 'tissu',
+        note: 'L’indigo est teint à la main : chaque pagne est unique.' },
+    ] },
+  { n: 7, lieu: 'foret', titre: 'Le petit singe', mec: 'cache', valeur: 'L’amitié',
+    intro: 'Dans la forêt sacrée, un petit singe joue à se cacher. Il est l’ami de Naba : trouve-le sans lui faire peur.',
+    manches: [4, 5], bete: 'le petit singe',
+    note: 'La forêt sacrée du village : on n’y coupe pas de bois, on n’y chasse pas.' },
+  { n: 8, lieu: 'mare', titre: 'Les poissons de la mare', mec: 'compte', valeur: 'Le partage',
+    intro: 'La mare nourrit tout le village. On compte la pêche pour la partager également entre les familles.',
+    questions: [
+      { q: 'Combien de poissons nagent dans la mare ?', options: ['4', '5', '6'], bonne: 1, spot: 'poissons',
+        note: 'On pêche au filet, et on rejette les plus petits pour l’année suivante.' },
+      { q: 'Combien de pirogues sont sur la berge ?', options: ['2', '3', '4'], bonne: 0, spot: 'pirogue',
+        note: 'La pirogue est creusée dans un seul tronc.' },
+      { q: 'Combien d’oiseaux pêchent autour de la mare ?', options: ['2', '3', '5'], bonne: 1, spot: 'oiseaux',
+        note: 'Hérons et aigrettes suivent les pêcheurs de très près.' },
+    ] },
+  { n: 9, lieu: 'grenier', titre: 'L’ordre du grenier', mec: 'ordre', valeur: 'L’entraide',
+    intro: 'Après la récolte, tout le village travaille ensemble — mais chaque chose à son tour. Touche les objets dans le bon ordre.',
+    suite: ['gerbes', 'batte', 'van', 'jarre'],
+    etapesTexte: ['on apporte les gerbes de mil', 'on les bat pour détacher les grains', 'on vanne pour chasser la poussière', 'on remplit la jarre du grenier'],
+    note: 'Battre, vanner, stocker : les gestes de la récolte, les mêmes depuis toujours.' },
+  { n: 10, lieu: 'forge', titre: 'Le secret du forgeron', mec: 'trouve', valeur: 'Le respect du métier',
+    intro: 'Le forgeron est un homme respecté : il fait les houes, les couteaux et les bijoux. Il pose trois énigmes à Naba avant de lui montrer son secret.',
+    etapes: [
+      { id: 'soufflet', t: 'Deux peaux de chèvre qui respirent : elles soufflent et le feu devient blanc.', r: 'Le soufflet de forge, en peau, actionné à la main.' },
+      { id: 'charbon', t: 'Il est noir, il ne brûle pas de flamme, mais il rougit et fait fondre le fer.', r: 'Le charbon de bois, fait par les charbonniers du village.' },
+      { id: 'enclume', t: 'C’est sur moi que le fer chante quand le marteau tombe.', r: 'L’enclume, posée sur un billot de bois dur.' },
+    ] },
+  { n: 11, lieu: 'ecole', titre: 'Les mots sous l’arbre', mec: 'quiz', valeur: 'L’envie d’apprendre',
+    intro: 'À l’école du village, la classe est sous le grand arbre. Le maître interroge Naba : réponds pour lui.',
+    questions: [
+      { q: 'Sur quoi les enfants écrivent-ils en classe ?', options: ['Une ardoise et une craie', 'Un ordinateur', 'Une feuille de banane'], bonne: 0, spot: 'ardoises',
+        note: 'L’ardoise s’efface : on peut écrire mille fois dessus.' },
+      { q: 'Comment appelle-t-on la langue qu’on parle avec sa famille ?', options: ['La langue maternelle', 'La langue du maître', 'La langue du marché'], bonne: 0,
+        note: 'Beaucoup d’enfants d’Afrique parlent deux ou trois langues avant sept ans.' },
+      { q: 'Combien de bancs y a-t-il sous l’arbre ?', options: ['2', '3', '4'], bonne: 1, spot: 'bancs',
+        note: 'On se serre : les bancs sont pour tout le monde.' },
+      { q: 'Que fait-on d’abord en arrivant à l’école ?', options: ['On salue le maître et les aînés', 'On s’assoit sans rien dire', 'On mange'], bonne: 0, spot: 'cloche',
+        note: 'La cloche sonne, on salue : le respect commence par le bonjour.' },
+    ] },
+  { n: 12, lieu: 'champ', titre: 'La saison des pluies', mec: 'ordre', valeur: 'La patience',
+    intro: 'Au champ, tout vient à son heure. Montre à Naba les gestes de la saison, dans le bon ordre.',
+    suite: ['houe', 'panier', 'mauvaise_herbe', 'oiseaux'],
+    etapesTexte: ['on prépare la terre avec la houe', 'on prend le panier pour semer', 'on arrache les mauvaises herbes', 'on chasse les oiseaux voleurs'],
+    note: 'Une seule saison des pluies par an : si on rate le moment, on attend un an.' },
+  { n: 13, lieu: 'enclos', titre: 'Le troupeau à compter', mec: 'compte', valeur: 'La confiance',
+    intro: 'Le soir, on compte les bêtes avant de fermer l’enclos. Personne ne doit manquer.',
+    questions: [
+      { q: 'Combien de chèvres dans l’enclos ?', options: ['2', '3', '4'], bonne: 0, spot: 'chevre',
+        note: 'La chèvre est la première richesse d’une famille.' },
+      { q: 'Combien de poussins suivent les poules ?', options: ['3', '4', '5'], bonne: 1, spot: 'poules',
+        note: 'La poule couve trois semaines avant que les poussins sortent.' },
+      { q: 'Combien de pintades ?', options: ['1', '2', '3'], bonne: 1, spot: 'pintades',
+        note: 'La pintade crie très fort : c’est la gardienne du village.' },
+    ] },
+  { n: 14, lieu: 'marche', titre: 'Les paniers de la vendeuse', mec: 'troc', valeur: 'L’honnêteté',
+    intro: 'La vendeuse a beaucoup de clients. Aide Naba à compter juste : rendre trop peu, c’est voler ; rendre trop, c’est se tromper.',
+    questions: [
+      { q: 'Douze poignées d’arachides dans 3 paniers, autant dans chacun. Combien par panier ?', options: ['3', '4', '6'], bonne: 1, spot: 'arachide',
+        note: 'On partage toujours en parts égales : c’est la règle du marché.' },
+      { q: 'Un poisson séché vaut 2 cauris. Naba en prend 4. Combien paie-t-il ?', options: ['6', '8', '10'], bonne: 1, spot: 'poisson',
+        note: 'Le poisson séché se garde des mois sans glace.' },
+      { q: 'Naba doit 9 cauris et donne 10. Combien la vendeuse doit-elle lui rendre ?', options: ['1', '2', '0'], bonne: 0, spot: 'cauris',
+        note: 'Une vendeuse honnête rend toujours la monnaie, même un seul cauri.' },
+    ] },
+  { n: 15, lieu: 'foret', titre: 'Les singes malicieux', mec: 'memoire', valeur: 'Le pardon',
+    intro: 'Les singes ont tapé sur les cachettes pour se moquer de Naba. Écoute leur ordre et refais-le : ils te pardonneront tes erreurs, pas le jeu.',
+    pool: ['termitiere', 'tronc', 'buisson', 'rocher', 'fougere'], manches: [3, 4],
+    note: 'Dans les contes, le singe est le farceur : il trompe même les plus malins.' },
+  { n: 16, lieu: 'baobab', titre: 'Le conte du griot', mec: 'ordre', valeur: 'La mémoire du village',
+    intro: 'Ce soir, le griot raconte. Mais un conte a son ordre : aide Naba à préparer la veillée.',
+    suite: ['djembe', 'tabourets', 'baton', 'kora', 'calebasse'],
+    etapesTexte: ['le tambour appelle le village', 'les anciens s’assoient sur les tabourets', 'on donne le bâton de parole au griot', 'la kora accompagne le conte', 'on partage la calebasse de bissap'],
+    note: 'Le griot garde l’histoire de tous : il connaît les noms des grands-parents de chacun.' },
+  { n: 17, lieu: 'mare', titre: 'La pirogue et le filet', mec: 'trouve', valeur: 'L’entraide',
+    intro: 'À la mare, on pêche à plusieurs. Le vieux pêcheur pose trois devinettes à Naba.',
+    etapes: [
+      { id: 'pirogue', t: 'Creusée dans un seul tronc, je porte le pêcheur et je ne bois jamais.', r: 'La pirogue monoxyle, taillée dans un tronc entier.' },
+      { id: 'filet', t: 'J’ai mille trous et pourtant je ne perds rien.', r: 'Le filet de pêche, tressé et lesté à la main.' },
+      { id: 'roseaux', t: 'Nous avons les pieds dans l’eau et nous chantons quand le vent passe.', r: 'Les roseaux de la berge, où les oiseaux font leurs nids.' },
+    ] },
+  { n: 18, lieu: 'case', titre: 'Les cauris du grand-père', mec: 'compte', valeur: 'La générosité',
+    intro: 'Karfa comptait tout ce qu’il donnait. Dans sa case, compte comme lui.',
+    questions: [
+      { q: 'Combien de pierres entourent le foyer ?', options: ['3', '4', '5'], bonne: 0, spot: 'foyer',
+        note: 'Trois pierres : c’est le foyer de toute l’Afrique de l’Ouest.' },
+      { q: 'Combien de canaris (jarres d’eau) dans la case ?', options: ['2', '3', '4'], bonne: 0, spot: 'jarre',
+        note: 'On garde toujours de l’eau fraîche pour le visiteur qui passe.' },
+      { q: 'Combien de godets sur le plateau d’awalé ?', options: ['10', '12', '14'], bonne: 1, spot: 'awale',
+        note: 'Douze godets, six par joueur : le compte est le même partout.' },
+    ] },
+  { n: 19, lieu: 'grenier', titre: 'Le grain bien gardé', mec: 'trouve', valeur: 'L’honnêteté',
+    intro: 'Le grenier appartient à tout le village : personne n’y prend sans le dire. Le gardien pose trois devinettes.',
+    etapes: [
+      { id: 'gerbes', t: 'On me lie par la taille et on me porte sur la tête depuis le champ.', r: 'La gerbe de mil, liée avec une corde de paille.' },
+      { id: 'van', t: 'Je danse dans les mains et le vent emporte ce qui ne se mange pas.', r: 'Le van : on lance le grain, la balle s’envole.' },
+      { id: 'jarre', t: 'Je suis ronde et fraîche, je garde le grain jusqu’à la saison sèche.', r: 'La jarre de terre cuite, scellée avec un couvercle.' },
+    ] },
+  { n: 20, lieu: 'forge', titre: 'Le rythme du marteau', mec: 'memoire', valeur: 'Le courage',
+    intro: 'Le forgeron travaille en rythme. Écoute son ordre et refais-le sans te tromper : le fer refroidit vite.',
+    pool: ['soufflet', 'charbon', 'enclume', 'marteau', 'fers'], manches: [3, 4],
+    note: 'Le forgeron est respecté et un peu craint : il commande au feu.' },
+  { n: 21, lieu: 'ecole', titre: 'Les proverbes coupés', mec: 'quiz', valeur: 'La sagesse',
+    intro: 'Le maître écrit des proverbes au tableau, mais la fin manque. Termine-les avec Naba.',
+    questions: [
+      { q: '« Seul on va plus vite, ensemble on va… »', options: ['plus loin', 'moins loin', 'tout droit'], bonne: 0, spot: 'tableau',
+        note: 'Proverbe répété dans tout le continent : l’entraide gagne toujours.' },
+      { q: '« La parole est comme l’eau : une fois versée… »', options: ['on ne la ramasse plus', 'elle revient', 'elle sèche'], bonne: 0,
+        note: 'C’est pourquoi on réfléchit avant de parler sous l’arbre à palabres.' },
+      { q: '« Un vieillard qui meurt, c’est… »', options: ['une bibliothèque qui brûle', 'un jour qui passe', 'un arbre qui pousse'], bonne: 0, spot: 'livres',
+        note: 'Phrase d’Amadou Hampâté Bâ, écrivain malien.' },
+      { q: '« Il faut tout un village pour… »', options: ['élever un enfant', 'construire une case', 'remplir un grenier'], bonne: 0, spot: 'bancs',
+        note: 'Chacun surveille, corrige et protège les enfants des autres.' },
+    ] },
+  { n: 22, lieu: 'champ', titre: 'L’intrus dans le champ', mec: 'intrus', valeur: 'L’attention',
+    intro: 'Trois choses vont ensemble, une seule ne va pas avec les autres. Touche l’intrus.',
+    manches: [
+      { q: 'Lequel ne se mange pas et doit être arraché ?', options: ['epis_murs', 'mauvaise_herbe', 'panier'], intrus: 'mauvaise_herbe',
+        pourquoi: 'Les épis se mangent, le panier sert à la récolte : la mauvaise herbe, on l’arrache.' },
+      { q: 'Lequel n’est pas un outil du paysan ?', options: ['houe', 'gourde', 'panier', 'oiseaux'], intrus: 'oiseaux',
+        pourquoi: 'Les oiseaux ne travaillent pas : ils viennent voler le mil !' },
+    ],
+    note: 'Au champ, il faut l’œil : une herbe oubliée mange l’eau du mil.' },
+  { n: 23, lieu: 'marche', titre: 'Le grand marché', mec: 'troc', valeur: 'Le partage',
+    intro: 'C’est jour de grand marché : les calculs sont plus durs. Naba compte sur toi.',
+    questions: [
+      { q: 'Cinq calebasses valent 15 cauris. Combien vaut une calebasse ?', options: ['2', '3', '5'], bonne: 1, spot: 'calebasse',
+        note: 'La calebasse est un fruit séché : bol, louche, instrument de musique.' },
+      { q: 'Naba a 20 cauris et achète 2 pagnes à 8 cauris chacun. Combien lui reste-t-il ?', options: ['4', '6', '12'], bonne: 0, spot: 'tissu',
+        note: 'Le pagne se porte, s’offre, et sert à porter le bébé sur le dos.' },
+      { q: 'Trois mesures de mil coûtent 12 cauris. Combien de mesures avec 20 cauris ?', options: ['4', '5', '6'], bonne: 1, spot: 'mil',
+        note: 'Ce qui reste, on le partage avec celui qui n’a rien : c’est la règle.' },
+    ] },
+  { n: 24, lieu: 'foret', titre: 'Les tambours de la forêt', mec: 'memoire', valeur: 'Le respect de la nature',
+    intro: 'La forêt sacrée parle : chaque endroit a son son. Écoute longtemps, puis refais l’ordre.',
+    pool: ['termitiere', 'tronc', 'buisson', 'rocher', 'fougere'], manches: [4, 5],
+    note: 'On entre dans la forêt sacrée sans bruit : c’est la maison des ancêtres et des animaux.' },
+  { n: 25, lieu: 'enclos', titre: 'Les jumeaux du troupeau', mec: 'intrus', valeur: 'L’égalité',
+    intro: 'Toutes les bêtes ont leur place, mais une seule ne ressemble pas aux autres. Touche l’intrus.',
+    manches: [
+      { q: 'Lequel n’a pas quatre pattes ?', options: ['chevre', 'zebu', 'ane', 'poules'], intrus: 'poules',
+        pourquoi: 'Les poules ont deux pattes et des plumes.' },
+      { q: 'Lequel n’a pas de sabots ?', options: ['zebu', 'ane', 'chevre', 'chien'], intrus: 'chien',
+        pourquoi: 'Le chien a des griffes : il garde le troupeau, il n’en fait pas partie.' },
+    ],
+    note: 'Grand ou petit, chaque animal du village est nourri : personne n’est oublié.' },
+  { n: 26, lieu: 'mare', titre: 'La nuit sur le fleuve', mec: 'cache', valeur: 'Le courage',
+    intro: 'Le soir tombe sur la mare et un petit héron s’est perdu. Naba a un peu peur, mais il y va.',
+    manches: [3, 4], bete: 'le petit héron',
+    note: 'Les pêcheurs sortent avant le jour : on apprend tôt à ne pas craindre le noir.' },
+  { n: 27, lieu: 'baobab', titre: 'Le procès des enfants', mec: 'ordre', valeur: 'La justice',
+    intro: 'Deux enfants se sont disputés. Sous l’arbre à palabres, on règle cela dans l’ordre — jamais en criant.',
+    suite: ['tabourets', 'baton', 'natte', 'calebasse'],
+    etapesTexte: ['chacun s’assoit et se calme', 'celui qui parle prend le bâton de parole', 'les enfants écoutent sur la natte', 'on partage la calebasse : c’est la paix'],
+    note: 'La palabre n’est pas une dispute : c’est la façon de se mettre d’accord.' },
+  { n: 28, lieu: 'grenier', titre: 'La récolte de tout le village', mec: 'compte', valeur: 'L’entraide',
+    intro: 'Toute la récolte est là. Compte bien : c’est le grain de tout le monde.',
+    questions: [
+      { q: 'Combien de greniers sur pilotis ?', options: ['2', '3', '4'], bonne: 1,
+        note: 'Sur pilotis, à l’abri des termites et de l’humidité.' },
+      { q: 'Combien de gerbes de mil sont posées sur l’aire ?', options: ['3', '4', '5'], bonne: 0, spot: 'gerbes',
+        note: 'On bat les gerbes sur une aire bien tassée pour ne pas perdre un grain.' },
+      { q: 'Combien de battes servent à battre le grain ?', options: ['1', '2', '3'], bonne: 1, spot: 'batte',
+        note: 'On bat à deux, en rythme : c’est plus vite et on chante.' },
+    ] },
+  { n: 29, lieu: 'forge', titre: 'Le masque du forgeron', mec: 'trouve', valeur: 'La transmission',
+    intro: 'Le forgeron va transmettre son savoir. Trois dernières devinettes, et il montre son masque à Naba.',
+    etapes: [
+      { id: 'fers', t: 'Je suis dur et froid, mais le feu me rend mou comme de la pâte.', r: 'Le fer en barres, travaillé rouge et martelé.' },
+      { id: 'marteau', t: 'Je frappe sans jamais me fatiguer ; sans moi le fer garde sa forme.', r: 'Le marteau du forgeron et ses tenailles.' },
+      { id: 'masque', t: 'Je regarde travailler, je ne parle jamais, et les enfants me craignent un peu.', r: 'Le masque du forgeron, gardien des secrets du métier.' },
+    ] },
+  { n: 30, lieu: 'baobab', titre: 'La grande fête du village', mec: 'memoire', valeur: 'L’amour du village',
+    intro: 'C’est la fête : tambours, kora, bissap et danses. Le griot joue une longue phrase — la plus longue de toutes. Refais-la, et le village portera Naba sur ses épaules.',
+    pool: ['djembe', 'kora', 'baton', 'tabourets', 'natte', 'calebasse', 'awale'], manches: [4, 5, 6],
+    note: 'Après la récolte, on danse trois nuits : c’est la fête de tout le monde, petits et grands.' },
+];
+/* Les seize jeux retenus, dans l’ordre de difficulté (numérotés 01 → 16). */
+const CHOIX = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 20, 21, 22, 30];
+const NIVEAUX = CHOIX.map((id, i) => ({ ...TOUS.find(d => d.n === id), n: i + 1 }));
+
+const NOM_LIEU = {
+  case: 'La case de Karfa', champ: 'Le champ de mil', enclos: 'L’enclos des animaux',
+  baobab: 'L’arbre à palabres', marche: 'Le marché', foret: 'La forêt sacrée',
+  mare: 'La mare et le fleuve', grenier: 'Le grenier du village', forge: 'La forge', ecole: 'L’école sous l’arbre',
+};
+/* Une ambiance par niveau : lumière, fond, or, bandeau tissé. */
+const AMB = {
+  1:  { nom: 'matin clair', bg: '#f1e3c9', hemi: [0xffffff, 0xd8d2c4, 1.0], key: [0xffffff, 2.2], or: '#b68235', b: ['#2b3c52', '#b0653a', '#d8b25c'] },
+  2:  { nom: 'nuit du griot', bg: '#17120f', sombre: true, feu: true, hemi: [0x6f7fa8, 0x3a2a1e, 0.34], key: [0x93a6cc, 0.55], or: '#e8c27a', b: ['#2b3c52', '#7d4a1e', '#b68235'] },
+  3:  { nom: 'plein midi', bg: '#f8f0d6', hemi: [0xffffff, 0xe6dcbe, 1.15], key: [0xfff8ea, 2.6], or: '#a06f24', b: ['#6d8a3c', '#b0653a', '#d8b25c'] },
+  4:  { nom: 'fin d’après-midi', bg: '#f0dfc0', hemi: [0xffe9c9, 0xc9a877, 1.0], key: [0xffd9a0, 2.0], or: '#a8541f', b: ['#a8541f', '#d8b25c', '#6d8a3c'] },
+  5:  { nom: 'crépuscule', bg: '#e8cfae', hemi: [0xffcfa0, 0x8a6136, 0.85], key: [0xff9e5a, 1.5], or: '#8e4529', b: ['#8e4529', '#2b3c52', '#d8b25c'] },
+  6:  { nom: 'jour de marché', bg: '#f6ecd0', hemi: [0xfffaf0, 0xdccdb0, 1.1], key: [0xfff4de, 2.4], or: '#2b3c52', orClair: '#5f8a90', b: ['#2b3c52', '#a8541f', '#c9a877'] },
+  7:  { nom: 'sous-bois', bg: '#e7e9cd', hemi: [0xdfeccf, 0x4f6b2c, 0.95], key: [0xeaf3d6, 1.8], or: '#4f6b2c', orClair: '#8fae54', b: ['#4f6b2c', '#6d8a3c', '#9a8368'] },
+  8:  { nom: 'première heure', bg: '#e9dcd6', hemi: [0xd9c7e0, 0x7f7f8a, 0.9], key: [0xffc9a0, 1.6], or: '#5f8a90', orClair: '#8fb7bb', b: ['#5f8a90', '#c98f57', '#c9a877'] },
+  9:  { nom: 'vent d’harmattan', bg: '#eee0c2', hemi: [0xf0e4c6, 0xbfa274, 1.05], key: [0xf5e2b8, 1.9], or: '#9b7232', b: ['#9b7232', '#c9a877', '#8a6136'] },
+  10: { nom: 'feu de forge', bg: '#efdfc2', feu: true, hemi: [0xfff0da, 0xc9a877, 0.95], key: [0xffffff, 2.0], or: '#a8541f', b: ['#8e4529', '#3b332c', '#d9741f'] },
+  11: { nom: 'matin d’école', bg: '#f2ead6', hemi: [0xffffff, 0xdfe2c4, 1.05], key: [0xffffff, 2.2], or: '#6d8a3c', orClair: '#9dbb60', b: ['#6d8a3c', '#2b3c52', '#d8b25c'] },
+  12: { nom: 'saison des pluies', bg: '#dde3dd', hemi: [0xcfd8d4, 0x6a7a68, 0.9], key: [0xdfe8e4, 1.2], or: '#5f8a90', orClair: '#8fb7bb', b: ['#5f8a90', '#6d8a3c', '#9b958c'] },
+  13: { nom: 'forge la nuit', bg: '#14100e', sombre: true, feu: true, hemi: [0x5a5f70, 0x2a1f18, 0.3], key: [0x8fa0c0, 0.45], or: '#f0a14a', orClair: '#ffc98a', b: ['#d9741f', '#3b332c', '#b68235'] },
+  14: { nom: 'grande chaleur', bg: '#f0e6cc', hemi: [0xfff4e0, 0xd8c9a8, 1.0], key: [0xffeccb, 2.1], or: '#7d5411', b: ['#7d5411', '#6d8a3c', '#c98f57'] },
+  15: { nom: 'soleil sur le mil', bg: '#f9f2d6', hemi: [0xffffff, 0xe8dfba, 1.2], key: [0xfffbe8, 2.7], or: '#c08a2e', b: ['#c08a2e', '#6d8a3c', '#b0653a'] },
+  16: { nom: 'nuit de fête', bg: '#191225', sombre: true, feu: true, hemi: [0x8a7fb0, 0x3a2a3a, 0.42], key: [0xc0a8e0, 0.6], or: '#f0c987', orClair: '#ffe0a8', b: ['#b68235', '#2b3c52', '#8e4529'] },
+};
+function appliquerAmbiance(n) {
+  const a = AMB[n] || AMB[1];
+  document.body.classList.toggle('sombre', !!a.sombre);
+  const r = document.documentElement.style;
+  r.setProperty('--or', a.or);
+  r.setProperty('--or-clair', a.orClair || a.or);
+  r.setProperty('--b1', a.b[0]); r.setProperty('--b2', a.b[1]); r.setProperty('--b3', a.b[2]);
+  r.setProperty('--fond1', a.sombre ? '#241a16' : '#fdf7ec');
+  r.setProperty('--fond2', a.sombre ? '#0e0a08' : a.bg);
+  stage.style.setProperty('--stage-bg', a.bg);
+  stage._scene.traverse(o => {
+    if (o.isHemisphereLight) { o.color.setHex(a.hemi[0]); o.groundColor.setHex(a.hemi[1]); o.intensity = a.hemi[2]; }
+  });
+  stage._key.color.setHex(a.key[0]); stage._key.intensity = a.key[1];
+  if (!lieuActif) return;
+  const lum = lieuActif.group.getObjectByName('lumiere_douce');
+  if (lum) { lum.intensity = a.sombre ? 0.3 : 0.9; lum.color.setHex(a.sombre ? 0xa9b6d4 : 0xfff2e2); }
+  const u = lieuActif.group.userData;
+  if (u.braises) u.braises.visible = !!a.feu;
+  if (u.marmite) u.marmite.visible = !a.feu;
+  if (a.feu) {
+    if (!feu) feu = new THREE.PointLight(0xff7a2a, 2.4, 7, 2);
+    feu.name = 'feu';
+    const p = u.foyerPos || [0, 0.3, 0];
+    feu.position.set(p[0], (p[1] || 0) + 0.34, p[2]);
+    lieuActif.group.add(feu); feu.visible = true;
+    mat.braise.emissive.setHex(0xff5a1e);
+  } else {
+    if (feu) feu.visible = false;
+    mat.braise.emissive.setHex(0x000000);
+  }
+}
+function defiDe(d) {
+  if (d.mec === 'trouve') return d.etapes.length + ' énigmes';
+  if (d.mec === 'memoire') return Math.max(...d.manches) + ' sons à retenir';
+  if (d.mec === 'compte') return d.questions.length + ' comptages';
+  if (d.mec === 'quiz') return d.questions.length + ' questions';
+  if (d.mec === 'troc') return d.questions.length + ' calculs';
+  if (d.mec === 'cache') return d.manches.length + ' fouilles';
+  if (d.mec === 'ordre') return d.suite.length + ' gestes en ordre';
+  if (d.mec === 'intrus') return d.manches.length + ' intrus';
+  return '';
+}
+const viesDe = n => Math.min(6, 2 + Math.floor((n - 1) / 5));
+
+/* ═══════ mémoire du joueur ═══════ */
+const CLE = 'naba-village-v1';
+function lire() { try { return JSON.parse(localStorage.getItem(CLE)) || { max: 1, faits: [] }; } catch (e) { return { max: 1, faits: [] }; } }
+function ecrire(d) { try { localStorage.setItem(CLE, JSON.stringify(d)); } catch (e) {} }
+let sauve = lire();
+
+/* ═══════ Naba ═══════ */
+const N = buildNaba();
+const naba = N.group;
+const walk = { on: false, from: new THREE.Vector3(), to: new THREE.Vector3(), t: 0, dur: 1, done: null };
+let kneel = 0, kneelTo = 0, solY = 0, feu = null;
+function goTo(x, z, done) {
+  walk.from.copy(naba.position); walk.to.set(x, solY, z);
+  walk.dur = Math.max(0.4, walk.from.distanceTo(walk.to) / 1.6);
+  walk.t = 0; walk.on = true; walk.done = done;
+  // filet de sécurité : si les images s'arrêtent (onglet en arrière-plan),
+  // on termine le déplacement quand même pour ne pas bloquer le jeu.
+  clearTimeout(walk.secours);
+  walk.secours = setTimeout(() => {
+    if (!walk.on) return;
+    walk.on = false; naba.position.copy(walk.to);
+    N.jambeG.rotation.x = N.jambeD.rotation.x = 0;
+    N.brasG.rotation.x = N.brasD.rotation.x = 0;
+    const d = walk.done; walk.done = null; d && d();
+  }, walk.dur * 1000 + 600);
+}
+const faceTo = (x, z) => { naba.rotation.y = Math.atan2(x - naba.position.x, z - naba.position.z); };
+let last = performance.now();
+(function tick(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (walk.on) {
+    walk.t += dt / walk.dur;
+    const k = Math.min(1, walk.t);
+    naba.position.lerpVectors(walk.from, walk.to, k);
+    faceTo(walk.to.x, walk.to.z);
+    const sw = Math.sin(now / 90) * 0.55;
+    N.jambeG.rotation.x = sw; N.jambeD.rotation.x = -sw;
+    N.brasG.rotation.x = -sw * 0.8; N.brasD.rotation.x = sw * 0.8;
+    naba.position.y = solY + Math.abs(Math.sin(now / 90)) * 0.02;
+    if (k >= 1) {
+      walk.on = false; clearTimeout(walk.secours);
+      N.jambeG.rotation.x = N.jambeD.rotation.x = 0;
+      N.brasG.rotation.x = N.brasD.rotation.x = 0; naba.position.y = solY;
+      const d = walk.done; walk.done = null; d && d();
+    }
+  } else naba.position.y = solY + Math.sin(now / 620) * 0.006;
+  kneel += (kneelTo - kneel) * Math.min(1, dt * 6);
+  if (feu && feu.visible) {
+    feu.intensity = 2.2 + Math.sin(now / 90) * 0.5 + Math.random() * 0.4;
+    mat.braise.emissiveIntensity = 0.7 + Math.random() * 0.5;
+  }
+  naba.scale.y = 1 - kneel * 0.28;
+  if (!walk.on) N.brasG.rotation.x = N.brasD.rotation.x = -kneel * 1.5;
+  requestAnimationFrame(tick);
+})(performance.now());
+
+function camTo(p, t, ms = 1000) {
+  const cam = stage._camera, ctr = stage._controls;
+  const p0 = cam.position.clone(), t0 = ctr.target.clone(), t1 = performance.now();
+  (function step() {
+    const k = Math.min(1, (performance.now() - t1) / ms), e = k < 0.5 ? 2 * k * k : 1 - 2 * (1 - k) ** 2;
+    cam.position.lerpVectors(p0, p, e); ctr.target.lerpVectors(t0, t, e);
+    if (k < 1) requestAnimationFrame(step);
+  })();
+}
+
+/* ═══════ son ═══════ */
+let ac = null;
+const audio = () => (ac = ac || new (window.AudioContext || window.webkitAudioContext)());
+function drum(freq = 170, gain = 0.45) {
+  const c = audio(), t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(freq * 1.6, t); o.frequency.exponentialRampToValueAtTime(freq, t + 0.14);
+  g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.45);
+}
+function chime(up = true) {
+  const c = audio(), t = c.currentTime;
+  [0, 0.12].forEach((d, i) => {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'triangle'; o.frequency.value = up ? [523, 784][i] : [330, 196][i];
+    g.gain.setValueAtTime(0.2, t + d); g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.5);
+    o.connect(g).connect(c.destination); o.start(t + d); o.stop(t + d + 0.55);
+  });
+}
+function thud() {
+  const c = audio(), t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.5);
+  g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.75);
+}
+function applaudissements(dur = 5) {
+  const c = audio(), sr = c.sampleRate, buf = c.createBuffer(2, sr * dur, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    for (let i = 0; i < d.length; i++) {
+      const s = i / sr, sw = Math.min(1, s / 0.5) * Math.min(1, (dur - s) / 1.2);
+      d[i] = (Math.random() * 2 - 1) * 0.15 * sw;
+    }
+    for (let n = 0; n < dur * 180; n++) {
+      const at = Math.floor(Math.random() * (d.length - 900)), amp = 0.35 + Math.random() * 0.65;
+      const s = at / sr, sw = Math.min(1, s / 0.5) * Math.min(1, (dur - s) / 1.2);
+      for (let i = 0; i < 700; i++) d[at + i] += (Math.random() * 2 - 1) * amp * Math.exp(-i / 110) * 0.5 * sw;
+    }
+  }
+  const src = c.createBufferSource(); src.buffer = buf;
+  const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1900; bp.Q.value = 0.55;
+  const g = c.createGain(); g.gain.value = 0.9;
+  src.connect(bp).connect(g).connect(c.destination); src.start();
+  [0, 0.34, 0.62].forEach((d, i) => setTimeout(() => drum([150, 190, 120][i], 0.4), d * 1000));
+}
+function cauris(n = 80) {
+  const box = document.getElementById('confetti');
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'cauri' + (i % 3 ? '' : ' pale');
+    d.style.left = Math.random() * 100 + '%';
+    d.style.animationDuration = (2.4 + Math.random() * 2.2) + 's';
+    d.style.animationDelay = (Math.random() * 1.6) + 's';
+    box.appendChild(d); setTimeout(() => d.remove(), 6500);
+  }
+}
+
+/* ═══════ monde ═══════ */
+const cache = {};
+let lieuActif = null, spots = {};
+function chargerLieu(clef) {
+  if (!cache[clef]) cache[clef] = LIEUX[clef].build();
+  const L = cache[clef];
+  if (lieuActif === L) return L;
+  if (lieuActif) lieuActif.group.remove(naba);
+  lieuActif = L; spots = L.spots;
+  L.group.add(naba);
+  solY = L.nabaStart[1];
+  naba.position.set(L.nabaStart[0], solY, L.nabaStart[2]);
+  naba.rotation.y = Math.PI; kneelTo = 0;
+  stage.setObject(L.group);
+  const lum = L.group.getObjectByName('lumiere_douce') || (() => {
+    const d = new THREE.DirectionalLight(0xfff2e2, 0.85); d.name = 'lumiere_douce';
+    d.position.set(0.6, 9, 0.8); L.group.add(d); return d;
+  })();
+  lum.visible = true;
+  camTo(new THREE.Vector3(...L.cam.pos), new THREE.Vector3(...L.cam.target), 1100);
+  Object.values(spots).forEach(s => { s.userData.halo.visible = false; });
+  if (L.group.userData.toit) L.group.userData.toit.position.y = 4.6;
+  if (L.group.userData.tresor) {
+    L.group.userData.tresor.visible = false;
+    L.group.userData.cendres.visible = true; L.group.userData.marmite.visible = true;
+  }
+  if (L.group.userData.chevreau) L.group.userData.chevreau.visible = false;
+  return L;
+}
+
+/* ═══════ jour et nuit ═══════ */
+function nuitTombe() {
+  document.body.classList.add('nuit');
+  stage.style.setProperty('--stage-bg', '#17120f');
+  stage._scene.traverse(o => {
+    if (o.isHemisphereLight) { o.intensity = 0.34; o.color.setHex(0x6f7fa8); o.groundColor.setHex(0x3a2a1e); }
+  });
+  stage._key.intensity = 0.55; stage._key.color.setHex(0x93a6cc);
+  const lum = lieuActif.group.getObjectByName('lumiere_douce');
+  if (lum) { lum.intensity = 0.34; lum.color.setHex(0xa9b6d4); }
+  const u = lieuActif.group.userData;
+  if (u.braises) { u.braises.visible = true; if (u.marmite) u.marmite.visible = false; }
+  if (!feu) feu = new THREE.PointLight(0xff7a2a, 2.4, 7, 2);
+  feu.name = 'feu_du_foyer';
+  const p = u.foyerPos || [0, 0.4, 0];
+  feu.position.set(p[0], p[1] + 0.3, p[2]);
+  lieuActif.group.add(feu); feu.visible = true;
+  mat.braise.emissive.setHex(0xff5a1e); mat.braise.emissiveIntensity = 1;
+}
+function jourRevient() {
+  document.body.classList.remove('nuit');
+  stage.style.setProperty('--stage-bg', '#f1e3c9');
+  stage._scene.traverse(o => {
+    if (o.isHemisphereLight) { o.intensity = 1.0; o.color.setHex(0xffffff); o.groundColor.setHex(0xd8d2c4); }
+  });
+  stage._key.intensity = 2.2; stage._key.color.setHex(0xffffff);
+  if (lieuActif) {
+    const lum = lieuActif.group.getObjectByName('lumiere_douce');
+    if (lum) { lum.intensity = 0.9; lum.color.setHex(0xfff2e2); }
+    const u = lieuActif.group.userData;
+    if (u.braises) { u.braises.visible = false; if (u.marmite) u.marmite.visible = true; }
+  }
+  if (feu) feu.visible = false;
+  mat.braise.emissive.setHex(0x000000);
+}
+
+/* ═══════ HUD ═══════ */
+const $ = id => document.getElementById(id);
+const J = { niv: null, vies: 0, pas: 0, total: 1, phase: 'carte', busy: false, tour: 0 };
+
+function majHud() {
+  const d = J.niv;
+  $('lvl').textContent = 'Niveau ' + String(d.n).padStart(2, '0');
+  $('titre').textContent = d.titre;
+  const amb = AMB[d.n] || AMB[1];
+  $('lieu').textContent = NOM_LIEU[d.lieu] + ' · ' + amb.nom;
+  $('defi').textContent = 'Défi · ' + defiDe(d);
+  $('vies').innerHTML = Array.from({ length: viesDe(d.n) }, (_, i) =>
+    `<span class="vie${i < J.vies ? '' : ' perdue'}"></span>`).join('');
+  $('barre').innerHTML = Array.from({ length: J.total }, (_, i) =>
+    `<span class="pas${i < J.pas ? ' on' : ''}"></span>`).join('');
+}
+const dire = s => { $('say').innerHTML = s; };
+function consigne(txt, note = '') {
+  $('consigne').innerHTML = txt + `<span id="note">${note}</span>`;
+}
+function boutons(liste) {
+  $('actions').innerHTML = '';
+  liste.forEach(([label, fn, cls]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn ' + (cls || 'btn-secondary'); b.textContent = label;
+    b.onclick = fn; $('actions').appendChild(b);
+  });
+}
+
+/* ═══════ panneaux ═══════ */
+function sheet(html) { $('sheet').innerHTML = html; $('veil').classList.add('on'); }
+function fermer() { $('veil').classList.remove('on'); }
+
+const svgHut = (x, y, r, rot = 0) => `<g transform="translate(${x} ${y})">
+  <ellipse cx="3" cy="${(r * 0.55).toFixed(1)}" rx="${(r * 1.02).toFixed(1)}" ry="${(r * 0.4).toFixed(1)}" fill="#5b3a17" opacity=".12"/>
+  <circle r="${r}" fill="#dcb768" stroke="#a4652f" stroke-width="1.3"/>
+  ${Array.from({ length: 16 }, (_, i) => { const a = i * Math.PI / 8 + rot; return `<line x1="0" y1="0" x2="${(Math.cos(a) * r).toFixed(1)}" y2="${(Math.sin(a) * r).toFixed(1)}" stroke="#b5883f" stroke-width="1" opacity=".8"/>`; }).join('')}
+  <circle r="${(r * 0.3).toFixed(1)}" fill="#c98f57" stroke="#8e4529" stroke-width=".8"/>
+  <circle r="${(r * 0.1).toFixed(1)}" fill="#8e4529"/>
+</g>`;
+const svgArbre = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})">
+  <ellipse cx="4" cy="16" rx="22" ry="7" fill="#5b3a17" opacity=".13"/>
+  <rect x="-3.5" y="-2" width="7" height="18" rx="2" fill="#8a6136"/>
+  <circle cx="-11" cy="-6" r="14" fill="#3f5528"/>
+  <circle cx="11" cy="-4" r="13" fill="#5c7a34"/>
+  <circle cx="0" cy="-16" r="14" fill="#6d8a3c"/>
+  <circle cx="-4" cy="-6" r="9" fill="#7d9c47"/>
+</g>`;
+const svgGrenier = (x, y) => `<g transform="translate(${x} ${y})">
+  <ellipse cx="2" cy="9" rx="13" ry="5" fill="#5b3a17" opacity=".12"/>
+  <circle r="11" fill="#c98f57" stroke="#8e4529" stroke-width="1"/>
+  <circle r="6" fill="#dcb768" stroke="#a4652f" stroke-width=".8"/>
+</g>`;
+const svgBete = (x, y, c = '#e6d8bd') => `<g transform="translate(${x} ${y})">
+  <ellipse rx="7" ry="4.6" fill="${c}" stroke="#8a7d68" stroke-width=".8"/>
+  <circle cx="7" cy="-1.6" r="2.6" fill="${c}" stroke="#8a7d68" stroke-width=".6"/>
+</g>`;
+
+const VILLAGE_SVG = `
+<defs>
+  <radialGradient id="gsol" cx="46%" cy="36%" r="72%">
+    <stop offset="0" stop-color="#f0dcb9"/><stop offset=".62" stop-color="#e0bf90"/>
+    <stop offset="1" stop-color="#cfa276"/>
+  </radialGradient>
+  <pattern id="grains" width="14" height="14" patternUnits="userSpaceOnUse">
+    <circle cx="3" cy="4" r="1" fill="#a97b48" opacity=".35"/>
+    <circle cx="10" cy="10" r="1.2" fill="#a97b48" opacity=".28"/>
+  </pattern>
+</defs>
+<g id="parure-carte">
+  ${Array.from({ length: 40 }, (_, i) => {
+    const x = 18 + i * 24.6;
+    return `<path d="M${x} 8 L${x + 12} 8 L${x + 6} 19 Z" fill="${i % 2 ? '#2b3c52' : '#b0653a'}" opacity=".85"/>`;
+  }).join('')}
+  ${Array.from({ length: 40 }, (_, i) => {
+    const x = 18 + i * 24.6;
+    return `<path d="M${x} 664 L${x + 12} 664 L${x + 6} 653 Z" fill="${i % 2 ? '#b0653a' : '#2b3c52'}" opacity=".85"/>`;
+  }).join('')}
+</g>
+<g id="fond">
+  <ellipse cx="500" cy="338" rx="352" ry="228" fill="url(#gsol)"/>
+  <ellipse cx="500" cy="338" rx="352" ry="228" fill="url(#grains)"/>
+  <ellipse cx="500" cy="338" rx="352" ry="228" fill="none" stroke="#a97b48" stroke-width="1.5"/>
+  <ellipse cx="500" cy="338" rx="344" ry="221" fill="none" stroke="#c9a877" stroke-width="1"/>
+  <path d="M300 470 C 360 430, 380 380, 448 366 C 520 350, 560 392, 630 372 C 690 356, 706 300, 690 262"
+        fill="none" stroke="#cfa16a" stroke-width="9" stroke-linecap="round" opacity=".55"/>
+  <path d="M300 470 C 360 430, 380 380, 448 366 C 520 350, 560 392, 630 372 C 690 356, 706 300, 690 262"
+        fill="none" stroke="#f2e2c4" stroke-width="2" stroke-dasharray="5 7"/>
+</g>
+<g id="mare">
+  <path d="M206 262 C 262 224, 318 244, 352 218 C 392 188, 432 202, 458 180"
+        fill="none" stroke="#5f8a90" stroke-width="17" stroke-linecap="round"/>
+  <path d="M206 262 C 262 224, 318 244, 352 218 C 392 188, 432 202, 458 180"
+        fill="none" stroke="#8fb7bb" stroke-width="9" stroke-linecap="round"/>
+  <path d="M214 258 C 268 226, 320 246, 356 220" fill="none" stroke="#dcecec" stroke-width="2" opacity=".8"/>
+  ${[[240, 268], [286, 246], [330, 246], [372, 214]].map(([x, y]) => `<line x1="${x}" y1="${y}" x2="${x - 3}" y2="${y + 13}" stroke="#6d8a3c" stroke-width="2.4"/>`).join('')}
+  <text x="250" y="294" class="etiq">la mare</text>
+</g>
+<g id="champ">
+  <g transform="translate(688 240) rotate(-11)">
+    <rect x="-90" y="-54" width="180" height="108" rx="4" fill="#dfc98b" stroke="#bda05c"/>
+    ${Array.from({ length: 8 }, (_, i) => `<line x1="-82" y1="${-44 + i * 13}" x2="82" y2="${-44 + i * 13}" stroke="#c2a55f" stroke-width="1.4"/>`).join('')}
+    ${Array.from({ length: 16 }, (_, i) => `<g transform="translate(${-76 + (i % 8) * 21} ${i < 8 ? -26 : 24})"><line y2="-11" stroke="#9c8340" stroke-width="1.6"/><ellipse cy="-14" rx="3.4" ry="5.4" fill="#cf9a2c"/></g>`).join('')}
+  </g>
+  <text x="690" y="318" class="etiq">le champ de mil</text>
+</g>
+<g id="foret">
+  ${svgArbre(262, 402, 1.15)}${svgArbre(318, 434, 0.95)}${svgArbre(228, 448, 0.85)}
+  ${svgArbre(292, 468, 1.05)}${svgArbre(352, 404, 0.75)}
+  <text x="286" y="506" class="etiq">la forêt sacrée</text>
+</g>
+<g id="enclos">
+  <ellipse cx="676" cy="430" rx="62" ry="52" fill="#dcc0a0" opacity=".75"/>
+  ${Array.from({ length: 18 }, (_, i) => {
+    const a = i * Math.PI / 9, x = 676 + Math.cos(a) * 62, y = 430 + Math.sin(a) * 52;
+    return `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x.toFixed(1)}" y2="${(y - 9).toFixed(1)}" stroke="#8a6136" stroke-width="2.4"/>`;
+  }).join('')}
+  <ellipse cx="676" cy="430" rx="62" ry="52" fill="none" stroke="#a4652f" stroke-width="1.2" stroke-dasharray="4 6"/>
+  ${svgBete(656, 414)}${svgBete(692, 424, '#b59a72')}${svgBete(666, 448, '#e6d8bd')}${svgBete(700, 450, '#9b958c')}
+  <text x="676" y="506" class="etiq">l’enclos</text>
+</g>
+<g id="marche">
+  ${[[444, 472], [480, 480], [516, 472], [552, 480]].map(([x, y], i) => `
+    <ellipse cx="${x}" cy="${y + 11}" rx="18" ry="5" fill="#5b3a17" opacity=".12"/>
+    <rect x="${x - 14}" y="${y - 8}" width="28" height="18" rx="2" fill="#c98f57" stroke="#8e4529"/>
+    <path d="M${x - 20} ${y - 8} L${x} ${y - 23} L${x + 20} ${y - 8} Z" fill="${i % 2 ? '#2b3c52' : '#a8541f'}"/>
+    <path d="M${x - 20} ${y - 8} L${x} ${y - 23}" stroke="#f2e2c4" stroke-width="2"/>
+    ${[0, 1, 2].map(k => `<circle cx="${x - 8 + k * 8}" cy="${y + 1}" r="2.6" fill="${k % 2 ? '#cf9a2c' : '#6d8a3c'}"/>`).join('')}`).join('')}
+  <text x="500" y="514" class="etiq">le marché</text>
+</g>
+<g id="case-principale">
+  ${svgHut(470, 330, 36, 0.2)}
+  <circle cx="470" cy="330" r="44" fill="none" stroke="#b68235" stroke-width="1" stroke-dasharray="3 5"/>
+  <text x="470" y="392" class="etiq">la case de Karfa</text>
+</g>
+${[[386, 300, 19], [418, 382, 17], [524, 290, 18], [538, 372, 16]].map(([x, y, r], i) => svgHut(x, y, r, i * 0.3)).join('')}
+<g id="baobab">
+  <ellipse cx="594" cy="366" rx="30" ry="9" fill="#5b3a17" opacity=".13"/>
+  <path d="M582 362 C 578 340, 580 328, 590 318 C 600 328, 602 340, 598 362 Z" fill="#9a8368" stroke="#7d6a52" stroke-width="1"/>
+  ${[[566, 320, 22], [614, 318, 20], [600, 344, 17], [560, 342, 16], [590, 298, 18]]
+    .map(([x, y, r], i) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${i % 2 ? '#3f5528' : '#6d8a3c'}"/>`).join('')}
+  ${[[576, 306], [606, 330], [586, 330]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#7d9c47"/>`).join('')}
+  ${[[556, 336], [620, 334]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="3" ry="5" fill="#d8c187"/>`).join('')}
+  <text x="592" y="396" class="etiq">l’arbre à palabres</text>
+</g>
+<g id="grenier">
+  ${svgGrenier(424, 252)}${svgGrenier(452, 262)}${svgGrenier(400, 270)}
+  <text x="424" y="232" class="etiq">les greniers</text>
+</g>
+<g id="forge">
+  <ellipse cx="610" cy="458" rx="26" ry="7" fill="#5b3a17" opacity=".12"/>
+  <rect x="588" y="426" width="44" height="30" rx="3" fill="#a4652f" stroke="#6d4a2b"/>
+  <path d="M584 426 L610 410 L636 426 Z" fill="#8e4529"/>
+  <circle cx="610" cy="468" r="6" fill="#d9741f"/>
+  <circle cx="610" cy="468" r="2.4" fill="#ffd08a"/>
+  <text x="610" y="492" class="etiq">la forge</text>
+</g>
+<g id="ecole">
+  ${svgArbre(398, 438, 1.05)}
+  ${[[380, 464], [398, 470], [416, 464]].map(([x, y]) => `<line x1="${x - 9}" y1="${y}" x2="${x + 9}" y2="${y}" stroke="#8a6136" stroke-width="3.4" stroke-linecap="round"/>`).join('')}
+  <text x="398" y="492" class="etiq">l’école</text>
+</g>
+<g id="betes-libres">
+  ${svgBete(340, 340, '#e6d8bd')}${svgBete(506, 420, '#b59a72')}${svgBete(452, 316, '#9b958c')}
+  ${[[430, 214], [470, 206], [640, 210]].map(([x, y]) => `<path d="M${x} ${y} l5 -4 l5 4" fill="none" stroke="#7a6448" stroke-width="1.8" stroke-linecap="round"/>`).join('')}
+</g>
+<g id="rose">
+  <circle cx="906" cy="120" r="22" fill="none" stroke="#b68235" stroke-width="1"/>
+  <path d="M906 100 L911 118 L906 140 L901 118 Z" fill="#b0653a"/>
+  <text x="906" y="90" class="etiq" style="font-style:normal;letter-spacing:.1em">N</text>
+</g>`;
+
+function ecranCarte() {
+  sauve = lire();
+  const cx = 500, cy = 335, rx = 456, ry = 280;
+  const dots = NIVEAUX.map((d, i) => {
+    const a = -Math.PI / 2 + i * (Math.PI * 2 / NIVEAUX.length);
+    const x = (cx + Math.cos(a) * rx).toFixed(1), y = (cy + Math.sin(a) * ry).toFixed(1);
+    const fait = (sauve.faits || []).includes(d.n);
+    const ouvert = d.n <= sauve.max && !d.bientot;
+    const cls = ['lvl', fait ? 'faite' : ouvert ? 'ouvert' : 'verrou', d.n === sauve.max ? 'courante' : ''].join(' ');
+    return `<g class="${cls}" data-n="${d.n}" data-titre="${d.titre}" data-lieu="${NOM_LIEU[d.lieu]}${d.bientot ? ' · bientôt' : ''}">
+      <title>${String(d.n).padStart(2, '0')} — ${d.titre} (${NOM_LIEU[d.lieu]})</title>
+      ${d.n === sauve.max ? `<circle class="halo" cx="${x}" cy="${y}" r="28"></circle>` : ''}
+      <circle class="plaque" cx="${x}" cy="${y}" r="21"></circle>
+      <text x="${x}" y="${y}">${String(d.n).padStart(2, '0')}</text></g>`;
+  }).join('');
+  const trail = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none"
+    stroke="#b68235" stroke-width="1.4" stroke-dasharray="2 9" opacity=".7"/>`;
+  sheet(`<span class="numeral">${String(Math.min(sauve.max, NIVEAUX.length)).padStart(2, '0')}</span>
+    <div id="cartouche"><h2>La carte du village</h2>
+      <p>seize jeux autour du village</p></div>
+    <svg id="carte-svg" viewBox="0 0 1000 672" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carte du village avec les seize niveaux">
+      <style>.etiq{font-family:var(--font-body);font-size:12.5px;font-style:italic;fill:#6f5836;text-anchor:middle}</style>
+      ${VILLAGE_SVG}
+      ${trail}
+      ${dots}
+    </svg>
+    <p id="survol">Touche un jeton vert<em> — les jetons de terre s’ouvriront après tes réussites.</em></p>
+    <div id="legende">
+      <span><i style="background:#6d8a3c"></i> ouvert</span>
+      <span><i style="background:#3f5528"></i> réussi</span>
+      <span><i style="background:#e4d4b8"></i> fermé</span>
+      <span><i style="box-shadow:inset 0 0 0 3px var(--or)"></i> ton niveau</span>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-primary" id="jouer" type="button">Jouer le niveau ${String(Math.min(sauve.max, NIVEAUX.length)).padStart(2, '0')}</button>
+    </div>`);
+  const survol = $('survol');
+  $('carte-svg').querySelectorAll('.lvl').forEach(g => {
+    const n = +g.dataset.n;
+    g.addEventListener('mouseenter', () => {
+      survol.innerHTML = `${String(n).padStart(2, '0')} — ${g.dataset.titre}<em> — ${g.dataset.lieu}</em>`;
+    });
+    g.addEventListener('click', () => {
+      if (g.classList.contains('verrou')) {
+        survol.innerHTML = `Ce jeu s’ouvrira plus tard<em> — réussis d’abord le niveau ${String(sauve.max).padStart(2, '0')}.</em>`;
+        return;
+      }
+      fermer(); lancer(n);
+    });
+  });
+  $('jouer').onclick = () => { fermer(); lancer(Math.min(sauve.max, NIVEAUX.length)); };
+}
+function ecranIntro(d) {
+  sheet(`<span class="numeral">${String(d.n).padStart(2, '0')}</span>
+    <h2>${d.titre}</h2>
+    <p>${d.intro}</p>
+    <ul>
+      <li>Lieu : <em>${NOM_LIEU[d.lieu]}</em>, ${(AMB[d.n] || AMB[1]).nom}</li>
+      <li>Défi : <strong>${defiDe(d)}</strong></li>
+      <li>Vies : <strong>${viesDe(d.n)}</strong> — au bout, le niveau recommence.</li>
+    </ul>
+    <div class="sheet-actions"><button class="btn btn-primary" id="ok" type="button">C’est parti</button>
+    <button class="btn btn-secondary" id="ret" type="button">Retour à la carte</button></div>`);
+  $('ok').onclick = () => { fermer(); demarrer(); };
+  $('ret').onclick = () => { fermer(); ecranCarte(); };
+}
+function ecranReussite() {
+  const d = J.niv;
+  const suivant = NIVEAUX.find(x => x.n === d.n + 1);
+  applaudissements(5); cauris(90);
+  sauve = lire();
+  sauve.faits = [...new Set([...(sauve.faits || []), d.n])];
+  sauve.max = Math.max(sauve.max, Math.min(d.n + 1, NIVEAUX.length));
+  ecrire(sauve);
+  sheet(`<span class="numeral">✓</span>
+    <h2>Bravo Naba !</h2>
+    <p>Le village applaudit. ${d.n === NIVEAUX.length ? 'Seize jeux, seize leçons : Naba est devenu le gardien du village.' : 'Un nouveau jeu s’ouvre sur la carte.'}</p>
+    <p class="valeur">La valeur de ce jeu : ${d.valeur.toLowerCase()}.</p>
+    <div class="sheet-actions">
+      ${suivant && !suivant.bientot ? `<button class="btn btn-primary" id="suite" type="button">Niveau ${String(suivant.n).padStart(2, '0')} — ${suivant.titre}</button>` : ''}
+      <button class="btn btn-secondary" id="carte2" type="button">Carte du village</button>
+    </div>
+    ${suivant && suivant.bientot ? '<p class="text-muted">Le niveau suivant arrive dans le prochain lot.</p>' : ''}`);
+  const s = $('suite'); if (s) s.onclick = () => { fermer(); lancer(d.n + 1); };
+  $('carte2').onclick = () => { fermer(); ecranCarte(); };
+}
+function ecranEchec(msg) {
+  thud();
+  sheet(`<span class="numeral">✕</span>
+    <h2>Raté</h2>
+    <p>${msg}</p>
+    <p>Plus de vie pour ce jeu : Naba recommence le niveau ${String(J.niv.n).padStart(2, '0')} depuis le début. Ta progression sur la carte est gardée.</p>
+    <div class="sheet-actions"><button class="btn btn-primary" id="re" type="button">Recommencer</button>
+    <button class="btn btn-secondary" id="carte3" type="button">Carte du village</button></div>`);
+  $('re').onclick = () => { fermer(); demarrer(); };
+  $('carte3').onclick = () => { fermer(); ecranCarte(); };
+}
+
+/* ═══════ moteur ═══════ */
+function lancer(n) {
+  const d = NIVEAUX.find(x => x.n === n);
+  if (!d || d.bientot) { ecranCarte(); return; }
+  J.niv = d; J.vies = viesDe(n); J.pas = 0; J.busy = false;
+  chargerLieu(d.lieu);
+  appliquerAmbiance(d.n);
+  majHud(); boutons([]); consigne('—'); dire('');
+  ecranIntro(d);
+}
+function perdreUneVie(msg) {
+  J.vies--; majHud();
+  if (J.vies <= 0) { J.phase = 'perdu'; setTimeout(() => ecranEchec(msg), 700); }
+  else { thud(); dire(msg + ' Il te reste ' + J.vies + (J.vies > 1 ? ' vies.' : ' vie.')); }
+  return J.vies > 0;
+}
+function demarrer() {
+  const d = J.niv;
+  J.tour++;
+  J.vies = viesDe(d.n); J.pas = 0; J.busy = false;
+  chargerLieu(d.lieu);
+  appliquerAmbiance(d.n);
+  Object.values(spots).forEach(s => { s.userData.halo.visible = false; });
+  if (d.mec === 'trouve') startTrouve();
+  else if (d.mec === 'memoire') startMemoire();
+  else if (d.mec === 'compte' || d.mec === 'quiz' || d.mec === 'troc') startQuestions();
+  else if (d.mec === 'cache') startCache();
+  else if (d.mec === 'ordre') startOrdre();
+  else if (d.mec === 'intrus') startIntrus();
+  majHud();
+}
+
+/* ── trouve ── */
+function startTrouve() {
+  J.phase = 'trouve'; J.total = J.niv.etapes.length; J.pas = 0;
+  majHud(); boutons([]); montrerEtape();
+  dire('Touche l’objet dont parle l’indice.');
+}
+function montrerEtape() {
+  const e = J.niv.etapes[J.pas];
+  if (e) consigne(e.t, e.r);
+}
+function toucheTrouve(id) {
+  const e = J.niv.etapes[J.pas];
+  J.busy = true;
+  const p = spots[id].position;
+  const cx = p.x * 0.6, cz = p.z * 0.6 + (p.z > 0 ? 0.2 : -0.05);
+  goTo(cx, cz, () => {
+    faceTo(p.x, p.z);
+    if (id === e.id) {
+      drum(180); chime(true);
+      spots[id].userData.halo.visible = true;
+      J.pas++; majHud();
+      if (J.pas >= J.niv.etapes.length) {
+        kneelTo = 1;
+        setTimeout(() => {
+          const u = lieuActif.group.userData;
+          if (u.tresor) { u.tresor.visible = true; u.cendres.visible = false; u.marmite.visible = false; }
+          if (u.recompense) u.recompense.visible = true;
+          dire(u.tresor ? 'La terre cède : la jarre de cauris est là !' : 'Le forgeron sourit et lui offre un bracelet d’or.');
+          setTimeout(ecranReussite, 1100);
+        }, 800);
+      } else { montrerEtape(); dire('Bien vu ! Naba trouve le mot suivant.'); J.busy = false; }
+    } else {
+      const reste = perdreUneVie(`Rien ici.`);
+      J.busy = false;
+      if (!reste) return;
+    }
+  });
+}
+
+/* ── mémoire ── */
+let suite = [], saisie = 0, manche = 0;
+function startMemoire() {
+  manche = 0; J.total = J.niv.manches.length; J.pas = 0; majHud();
+  boutons([]); joueManche();
+}
+function joueManche() {
+  J.phase = 'demo'; J.busy = true; saisie = 0;
+  const n = J.niv.manches[manche];
+  consigne(`Manche ${manche + 1} sur ${J.niv.manches.length} — ${n} objets. Écoute le tambour, puis touche les objets dans le même ordre.`, J.niv.note);
+  suite = Array.from({ length: n }, () => J.niv.pool[Math.floor(Math.random() * J.niv.pool.length)]);
+  dire('Écoute bien…');
+  const t = J.tour;
+  suite.forEach((id, i) => setTimeout(() => {
+    if (J.tour !== t) return;
+    const p = spots[id].position; faceTo(p.x, p.z); drum(TONS[id] || 200);
+    spots[id].userData.halo.visible = true;
+    setTimeout(() => { spots[id].userData.halo.visible = false; }, 460);
+  }, 650 + i * 760));
+  setTimeout(() => {
+    if (J.tour !== t) return;
+    J.phase = 'saisie'; J.busy = false; dire('À toi de jouer !');
+  }, 650 + suite.length * 760 + 300);
+}
+const TONS = { djembe: 150, mortier: 200, jarre: 262, masque: 330, tabouret: 392, awale: 440, natte: 494, calebasse: 587 };
+function toucheMemoire(id) {
+  const attendu = suite[saisie];
+  const p = spots[id].position; faceTo(p.x, p.z);
+  if (id === attendu) {
+    drum(TONS[id] || 200); spots[id].userData.halo.visible = true;
+    setTimeout(() => { spots[id].userData.halo.visible = false; }, 300);
+    saisie++;
+    if (saisie >= suite.length) {
+      J.busy = true; chime(true); manche++; J.pas = manche; majHud();
+      if (manche >= J.niv.manches.length) { J.phase = 'gagne'; dire('Sans faute !'); setTimeout(ecranReussite, 800); }
+      else { const t = J.tour; dire('Manche réussie. Le tambour reprend, plus long.'); setTimeout(() => { if (J.tour === t) joueManche(); }, 1400); }
+    } else dire(`${saisie} sur ${suite.length}…`);
+  } else {
+    J.busy = true;
+    const reste = perdreUneVie(`Le tambour avait dit ${LABEL(attendu)}.`);
+    if (reste) { const t = J.tour; dire($('say').innerHTML + ' On réécoute.'); setTimeout(() => { if (J.tour === t) joueManche(); }, 1400); }
+  }
+}
+const LABEL = id => (spots[id] ? spots[id].userData.label : id);
+
+/* ── compte / quiz (questions) ── */
+let qi = 0;
+function startQuestions() {
+  qi = 0; J.total = J.niv.questions.length; J.pas = 0; J.phase = 'question'; majHud();
+  poserQuestion();
+}
+function poserQuestion() {
+  const q = J.niv.questions[qi];
+  Object.values(spots).forEach(s => { s.userData.halo.visible = false; });
+  if (q.spot && spots[q.spot]) {
+    const sp = spots[q.spot];
+    if (sp.userData.halo) sp.userData.halo.visible = true;
+    const p = sp.position;
+    if (J.niv.mec === 'compte') { faceTo(p.x, p.z); }
+  }
+  consigne(q.q, q.note || '');
+  dire(`Question ${qi + 1} sur ${J.niv.questions.length}.`);
+  boutons(q.options.map((o, i) => [o, () => repondre(i), 'btn-secondary']));
+}
+function repondre(i) {
+  if (J.busy) return;
+  const q = J.niv.questions[qi];
+  if (i === q.bonne) {
+    chime(true); J.pas = ++qi; majHud();
+    if (qi >= J.niv.questions.length) {
+      J.busy = true; boutons([]); dire('Toutes les réponses sont justes !');
+      setTimeout(ecranReussite, 700);
+    } else { dire('Juste !'); poserQuestion(); }
+  } else {
+    const reste = perdreUneVie('Ce n’est pas ça.');
+    if (reste) poserQuestion();
+    else boutons([]);
+  }
+}
+
+/* ── ordre du rituel ── */
+let ordreI = 0;
+function startOrdre() {
+  J.phase = 'ordre'; J.total = J.niv.suite.length; J.pas = 0; ordreI = 0; J.busy = false;
+  majHud(); boutons([]);
+  consigne(J.niv.etapesTexte.map((t, i) => `${i + 1}. ${t}`).join('<br>'), J.niv.note);
+  dire('Touche les objets dans cet ordre.');
+}
+function toucheOrdre(id) {
+  const attendu = J.niv.suite[ordreI];
+  J.busy = true;
+  const p = spots[id].position;
+  goTo(p.x * 0.7, p.z * 0.7 + (p.z > 0 ? 0.2 : -0.05), () => {
+    faceTo(p.x, p.z);
+    if (id === attendu) {
+      drum(TONS[id] || 190 + ordreI * 40); chime(true);
+      spots[id].userData.halo.visible = true;
+      ordreI++; J.pas = ordreI; majHud();
+      if (ordreI >= J.niv.suite.length) {
+        J.phase = 'gagne'; dire('Le grain est au grenier. Tout le village a aidé !');
+        setTimeout(ecranReussite, 1000);
+      } else { dire(`Étape ${ordreI} faite. Au suivant.`); J.busy = false; }
+    } else {
+      const reste = perdreUneVie(`Pas encore ça : c’était ${LABEL(attendu)}.`);
+      ordreI = 0; J.pas = 0; majHud();
+      Object.values(spots).forEach(s => { s.userData.halo.visible = false; });
+      J.busy = false;
+      if (reste) dire($('say').innerHTML + ' On reprend à la première étape.');
+    }
+  });
+}
+
+/* ── trouve l’intrus ── */
+let intrusI = 0;
+function startIntrus() {
+  J.phase = 'intrus'; J.total = J.niv.manches.length; J.pas = 0; intrusI = 0; J.busy = false;
+  majHud(); boutons([]); poserIntrus();
+}
+function poserIntrus() {
+  const m = J.niv.manches[intrusI];
+  Object.values(spots).forEach(s => { s.userData.halo.visible = false; });
+  m.options.forEach(id => { if (spots[id]) spots[id].userData.halo.visible = true; });
+  consigne(`${m.q}<br>${m.options.map(LABEL).join(' · ')}`, J.niv.note);
+  dire(`Question ${intrusI + 1} sur ${J.niv.manches.length}. Touche l’intrus.`);
+  J.busy = false;
+}
+function toucheIntrus(id) {
+  const m = J.niv.manches[intrusI];
+  if (!m.options.includes(id)) { dire('Choisis parmi les objets cités dans la question.'); return; }
+  J.busy = true;
+  const p = spots[id].position;
+  goTo(p.x * 0.7, p.z * 0.7 + (p.z > 0 ? 0.2 : -0.05), () => {
+    faceTo(p.x, p.z);
+    if (id === m.intrus) {
+      chime(true); drum(240);
+      Object.values(spots).forEach(s => { s.userData.halo.visible = false; });
+      spots[id].userData.halo.visible = true;
+      intrusI++; J.pas = intrusI; majHud();
+      if (intrusI >= J.niv.manches.length) {
+        J.phase = 'gagne'; dire('Bien vu ! ' + m.pourquoi);
+        setTimeout(ecranReussite, 1200);
+      } else { const t = J.tour; dire(m.pourquoi); J.busy = false; setTimeout(() => { if (J.tour === t) poserIntrus(); }, 1600); }
+    } else {
+      const reste = perdreUneVie('Non, celui-là va avec les autres.');
+      J.busy = false;
+      if (reste) dire($('say').innerHTML + ' Regarde encore.');
+    }
+  });
+}
+
+/* ── cachette ── */
+let cachettes = [], bonne = null;
+function startCache() {
+  manche = 0; J.total = J.niv.manches.length; J.pas = 0; majHud(); placerChevreau();
+}
+function placerChevreau() {
+  J.phase = 'cache'; J.busy = false;
+  const toutes = lieuActif.group.userData.cachettes;
+  const n = J.niv.manches[manche];
+  cachettes = toutes.slice(0, n);
+  bonne = cachettes[Math.floor(Math.random() * cachettes.length)];
+  const ch = lieuActif.group.userData.chevreau;
+  ch.visible = false;
+  const p = spots[bonne].position;
+  ch.position.set(p.x + 0.25, lieuActif.nabaStart[1], p.z + 0.2);
+  const bete = J.niv.bete || 'le chevreau';
+  cachettes.forEach(id => { spots[id].userData.halo.visible = true; });
+  consigne(`Manche ${manche + 1} sur ${J.niv.manches.length} — ${bete} est dans une de ces ${n} cachettes : ${cachettes.map(LABEL).join(', ')}. Touche celle que tu choisis.`, J.niv.note);
+  dire('Écoute… on l’entend à peine.');
+  drum(300, 0.18);
+}
+function toucheCache(id) {
+  if (!cachettes.includes(id)) { dire('Ce n’est pas une cachette. Regarde la liste.'); return; }
+  J.busy = true;
+  const p = spots[id].position;
+  goTo(p.x * 0.72, p.z * 0.72, () => {
+    faceTo(p.x, p.z);
+    if (id === bonne) {
+      const ch = lieuActif.group.userData.chevreau;
+      ch.visible = true; chime(true); drum(320, 0.3);
+      spots[id].userData.halo.visible = true;
+      manche++; J.pas = manche; majHud();
+      if (manche >= J.niv.manches.length) {
+        J.phase = 'gagne'; dire('Trouvé ! Vous rentrez ensemble.');
+        setTimeout(ecranReussite, 1000);
+      } else { const t = J.tour; dire('Trouvé ! Mais il se cache encore une fois…'); setTimeout(() => { if (J.tour !== t) return; ch.visible = false; placerChevreau(); }, 1600); }
+    } else {
+      const reste = perdreUneVie('Personne dans cette cachette.');
+      J.busy = false;
+      if (reste) dire($('say').innerHTML + ' Essaie une autre cachette.');
+    }
+  });
+}
+
+/* ═══════ pointeur ═══════ */
+const dom = stage._renderer.domElement, ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const tip = $('tip');
+function viser(ev) {
+  const r = dom.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, stage._camera);
+  const hit = ray.intersectObjects(Object.values(spots), true)[0];
+  if (!hit) return null;
+  let o = hit.object;
+  while (o && !o.userData.hotspot) o = o.parent;
+  return o;
+}
+const cliquable = () => !J.busy && ['trouve', 'saisie', 'cache', 'ordre', 'intrus'].includes(J.phase);
+let down = null;
+dom.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
+dom.addEventListener('pointerup', e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y); down = null;
+  if (moved > 6 || !cliquable()) return;
+  const o = viser(e); if (!o) return;
+  const id = o.userData.hotspot;
+  if (J.phase === 'trouve') toucheTrouve(id);
+  else if (J.phase === 'saisie') toucheMemoire(id);
+  else if (J.phase === 'cache') toucheCache(id);
+  else if (J.phase === 'ordre') toucheOrdre(id);
+  else if (J.phase === 'intrus') toucheIntrus(id);
+});
+dom.addEventListener('pointermove', e => {
+  const o = cliquable() ? viser(e) : null;
+  dom.style.cursor = o ? 'pointer' : '';
+  tip.style.opacity = o ? '1' : '0';
+  if (o) { tip.textContent = o.userData.label; tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; }
+});
+
+$('btn-carte').onclick = ecranCarte;
+$('btn-rejouer').onclick = () => { if (J.niv) demarrer(); };
+
+/* ═══════ départ ═══════ */
+chargerLieu('case');
+J.niv = NIVEAUX[0]; J.vies = 1; J.total = 3; majHud();
+consigne('Seize jeux dans le village : la case, le champ, l’enclos, l’arbre à palabres, le marché, la forêt, la mare, le grenier, la forge et l’école. Ouvre la carte et commence par le premier.');
+ecranCarte();
+window.__dbg = { J, lancer, demarrer, camTo, lieu: () => lieuActif, spots: () => spots, touche: id => {
+  if (J.phase === 'trouve') toucheTrouve(id);
+  else if (J.phase === 'saisie') toucheMemoire(id);
+  else if (J.phase === 'cache') toucheCache(id);
+  else if (J.phase === 'ordre') toucheOrdre(id);
+  else if (J.phase === 'intrus') toucheIntrus(id);
+}, repondre, suite: () => suite, bonne: () => bonne };
+</script>
+</body>
+</html>

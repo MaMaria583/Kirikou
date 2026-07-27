@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/Le village de Naba.html" },
     { "source": "/kirikou", "destination": "/case-kirikou.html" }
   ]
 }
